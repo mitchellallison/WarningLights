@@ -36,7 +36,7 @@
 		EFBD7E8017CB66BC000D759E /* HueLight.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HueLight.m; sourceTree = "<group>"; };
 		EFE83C8517E5E34A00A2F010 /* HueStateChangeOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HueStateChangeOperation.h; sourceTree = "<group>"; };
 		EFE83C8617E5E34A00A2F010 /* HueStateChangeOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HueStateChangeOperation.m; sourceTree = "<group>"; };
-		EFE83C8817E5E76700A2F010 /* HueStateChangeOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HueStateChangeOperationDelegate.h; path = ../HueStateChangeOperationDelegate.h; sourceTree = "<group>"; };
+		EFE83C8817E5E76700A2F010 /* HueStateChangeOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HueStateChangeOperationDelegate.h; sourceTree = "<group>"; };
 		EFF2FA8E17D0F1ED0037D7CE /* HueLightDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HueLightDelegate.h; sourceTree = "<group>"; };
 		EFF2FA8F17D0F6FF0037D7CE /* HueConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HueConstants.h; sourceTree = "<group>"; };
 		EFFA247C17F96E510036D9DB /* IDEBuildOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IDEBuildOperation.h; sourceTree = "<group>"; };
