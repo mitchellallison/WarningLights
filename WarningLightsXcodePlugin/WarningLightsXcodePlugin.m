@@ -385,12 +385,41 @@ static BOOL performSwizzle(Class class, SEL original, SEL alternative, BOOL forI
                     [light setAlert:HueLightAlertTypeNone];
                     [light setEffect:HueLightEffectTypeNone];
                 }];
+              // stay red for 10 seconds before reverting back to previous state
+              dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC), dispatch_get_main_queue(), ^(void){
                 // Revert to previous state over 2 seconds
                 [light popStateWithTransitionTime:20];
+              });
             }];
         }];
+    } else if(errors == 0) {
+      
+      [selectedLights enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        HueLight *light = (HueLight *)obj;
+        [light syncWithCompletionBlock:^{
+          // Save previous light state
+          [light pushState];
+          // Perform changes all at once
+          [light commitStateChanges:^{
+            /* Sets a light on, to maximum brightness and saturation,
+             to hue: 25500 (Green) for 2 seconds */
+            [light setOn:YES];
+            [light setHue:25500];
+            [light setTransitionTime:20];
+            [light setBrightness:255];
+            [light setSaturation:255];
+            [light setAlert:HueLightAlertTypeNone];
+            [light setEffect:HueLightEffectTypeNone];
+          }];
+          // stay red for 10 seconds before reverting back to previous state
+          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC), dispatch_get_main_queue(), ^(void){
+            // Revert to previous state over 2 seconds
+            [light popStateWithTransitionTime:20];
+          });
+        }];
+      }];
     }
-    
+  
     // Continue with existing implementation
     [self wlLastBuilderDidFinish];
 }
