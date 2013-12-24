@@ -7,7 +7,6 @@
 //
 
 #import "WarningLightsXcodePlugin.h"
-#import <objc/objc-runtime.h>
 #import "HueController.h"
 
 @interface WarningLightsXcodePlugin () <NSMenuDelegate>
@@ -48,7 +47,9 @@ static NSMutableArray *selectedLights = nil;
         // Whenever a project is launched, we swizzle the build methods and set
         // up the menu bar and HueController
         [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(swizzleBuildMethods:) name:@"PBXProjectDidOpenNotification" object:nil];
+                                                 selector:@selector(buildOperationDidStop:)
+                                                     name:@"IDEBuildOperationDidStopNotification"
+                                                   object:nil];
         [self setupMenuBarItem];
         [hueController searchForBridge];
         hueController = [[HueController alloc] initWithDelegate:self];
@@ -265,106 +266,18 @@ static NSMutableArray *selectedLights = nil;
     return YES;
 }
 
-#pragma mark Swizzle & Class Dump methods
-
-/*! Swizzles -lastBuilderDidFinish on IDEBuildOperation in order to be intercept
- * build phases.
- *\param notification The NSNotification used to signal the swizzle.
- */
-- (void)swizzleBuildMethods:(NSNotification *)notification
+- (void)buildOperationDidStop:(NSNotification *)notification
 {
-    NSBundle *bundle = [NSBundle mainBundle];
-    NSString *applicationIdentifier = [bundle bundleIdentifier];
-    
-    if (![applicationIdentifier isEqualToString:@"com.apple.dt.Xcode"])
-        return;
-        
-    Class class = NSClassFromString(@"IDEBuildOperation");
-    performSwizzle(class, @selector(lastBuilderDidFinish), @selector(wlLastBuilderDidFinish), YES);
-}
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
 
-// Runtime funtime - Method swizzling function.
-static BOOL performSwizzle(Class class, SEL original, SEL alternative, BOOL forInstance)
-{
-    // Get original method
-	Method origMethod = class_getInstanceMethod(class, original);
-	if (!origMethod) {
-		NSLog(@"Original method %@ not found.", NSStringFromSelector(original));
-		return NO;
-	}
-    
-    // Get alternative method
-	Method altMethod = class_getInstanceMethod(class, alternative);
-	if (!alternative) {
-		NSLog(@"Alternative method %@ not found.", NSStringFromSelector(alternative));
-		return NO;
-	}
-    
-    // Add both methods to the class
-	class_addMethod(class,
-					original,
-					class_getMethodImplementation(class, original),
-					method_getTypeEncoding(origMethod));
-	class_addMethod(class,
-					alternative,
-					class_getMethodImplementation(class, alternative),
-					method_getTypeEncoding(altMethod));
-    
-    //Swap implementations
-	method_exchangeImplementations(class_getInstanceMethod(class, original), class_getInstanceMethod(class, alternative));
-	return YES;
-}
-
-// Useful class dump for inspecting the runtime elements of Xcode classes.
-- (void)dumpInfoFromClass:(Class)clazz
-{
-    u_int count;
-    
-    Ivar* ivars = class_copyIvarList(clazz, &count);
-    NSMutableArray* ivarArray = [NSMutableArray arrayWithCapacity:count];
-    for (int i = 0; i < count ; i++)
-    {
-        const char* ivarName = ivar_getName(ivars[i]);
-        [ivarArray addObject:[NSString  stringWithCString:ivarName encoding:NSUTF8StringEncoding]];
-    }
-    free(ivars);
-    
-    objc_property_t* properties = class_copyPropertyList(clazz, &count);
-    NSMutableArray* propertyArray = [NSMutableArray arrayWithCapacity:count];
-    for (int i = 0; i < count ; i++)
-    {
-        const char* propertyName = property_getName(properties[i]);
-        [propertyArray addObject:[NSString  stringWithCString:propertyName encoding:NSUTF8StringEncoding]];
-    }
-    free(properties);
-    
-    Method* methods = class_copyMethodList(clazz, &count);
-    NSMutableArray* methodArray = [NSMutableArray arrayWithCapacity:count];
-    for (int i = 0; i < count ; i++)
-    {
-        SEL selector = method_getName(methods[i]);
-        const char* methodName = sel_getName(selector);
-        [methodArray addObject:[NSString  stringWithCString:methodName encoding:NSUTF8StringEncoding]];
-    }
-    free(methods);
-    
-    NSDictionary* classDump = [NSDictionary dictionaryWithObjectsAndKeys:
-                               ivarArray, @"ivars",
-                               propertyArray, @"properties",
-                               methodArray, @"methods",
-                               nil];
-    
-    NSLog(@"%@", classDump);
-}
-
-@end
-
-@implementation NSObject (WarningLightsBuildPatch)
-
-- (void)wlLastBuilderDidFinish
-{
     // Grab the total number of errors from the build
-    unsigned long long errors = (unsigned long long)[[self performSelector:@selector(buildLog)] performSelector:@selector(totalNumberOfErrors)];
+    id buildLog = [notification.object performSelector:@selector(buildLog)];
+    uint64_t errors = (uint64_t)[buildLog performSelector:@selector(totalNumberOfErrors)];
+    
+#pragma clang diagnostic pop
+
+    NSLog(@"Build Completed - errors: %llu", errors);
     
     if (errors > 0)
     {
@@ -390,9 +303,6 @@ static BOOL performSwizzle(Class class, SEL original, SEL alternative, BOOL forI
             }];
         }];
     }
-    
-    // Continue with existing implementation
-    [self wlLastBuilderDidFinish];
 }
 
 @end
