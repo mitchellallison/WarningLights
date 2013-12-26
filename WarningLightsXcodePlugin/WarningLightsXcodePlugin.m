@@ -44,8 +44,8 @@ static NSMutableArray *selectedLights = nil;
 {
     if (self = [super init])
     {
-        // Whenever a project is launched, we swizzle the build methods and set
-        // up the menu bar and HueController
+        // Whenever a project is launched, register for notifications from IDEBuildOperationDidStopNotification, and
+        // act on the result
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(buildOperationDidStop:)
                                                      name:@"IDEBuildOperationDidStopNotification"
@@ -276,8 +276,6 @@ static NSMutableArray *selectedLights = nil;
     uint64_t errors = (uint64_t)[buildLog performSelector:@selector(totalNumberOfErrors)];
     
 #pragma clang diagnostic pop
-
-    NSLog(@"Build Completed - errors: %llu", errors);
     
     if (errors > 0)
     {
