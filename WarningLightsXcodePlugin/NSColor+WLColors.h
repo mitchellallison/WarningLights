@@ -22,4 +22,6 @@
 + (NSColor *)pastelGreen;
 + (NSColor *)outlineGreen;
 
++ (NSColor *)opaqueGray;
+
 @end

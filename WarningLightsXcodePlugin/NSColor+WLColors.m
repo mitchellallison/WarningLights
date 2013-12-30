@@ -54,5 +54,10 @@
     return [NSColor colorWithSRGBRed:162/255.0f green:205/255.0f blue:41/255.0f alpha:1.0];
 }
 
++ (NSColor *)opaqueGray
+{
+    return [NSColor colorWithSRGBRed:217/255.0f green:217/255.0f blue:217/255.0f alpha:0.5];
+}
+
 
 @end

@@ -8,10 +8,11 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface WLMenuItemViewToggle : NSView
+@interface WLMenuItemViewToggle : NSButton
 
 @property (strong) NSColor *fillColor;
 @property (strong) NSColor *strokeColor;
+@property BOOL highlighted;
 
 - (instancetype)initWithFillColor:(NSColor *)color strokeColor:(NSColor *)color;
 

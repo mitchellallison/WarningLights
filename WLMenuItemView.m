@@ -10,6 +10,9 @@
 #import "WLMenuItemViewToggle.h"
 #import "NSColor+WLColors.h"
 
+static NSString *const WLMenuItemViewToggleTypeKey = @"WLMenuItemViewToggleType";
+static NSString *const WLToggleKey = @"WLToggleKey";
+
 typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
 {
     WLMenuItemViewToggleTypeError,
@@ -20,10 +23,14 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
 
 @interface WLMenuItemView ()
 
-@property WLMenuItemViewToggle *errorToggle;
-@property WLMenuItemViewToggle *warningToggle;
-@property WLMenuItemViewToggle *analyzeToggle;
-@property WLMenuItemViewToggle *successToggle;
+@property (strong) WLMenuItemViewToggle *errorToggle;
+@property (strong) WLMenuItemViewToggle *warningToggle;
+@property (strong) WLMenuItemViewToggle *analyzeToggle;
+@property (strong) WLMenuItemViewToggle *successToggle;
+
+@property (strong, nonatomic) NSMutableSet *toggleTrackingAreas;
+
+@property (strong) NSDictionary *currentHoveredToggleInfo;
 
 @property NSTextField *descriptionLabel;
 
@@ -51,25 +58,31 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
         [self.descriptionLabel setSelectable:NO];
         [self.descriptionLabel setFont:[NSFont labelFontOfSize:[NSFont labelFontSize]]];
         [self.descriptionLabel setTextColor:[NSColor grayColor]];
-        [self.descriptionLabel setStringValue:@"temp"];
+        [self.descriptionLabel setStringValue:@""];
         
         [self addSubview:self.descriptionLabel];
         
         self.errorToggle = [[WLMenuItemViewToggle alloc] initWithFillColor:[NSColor pastelRed] strokeColor:[NSColor outlineRed]];
+        [self.errorToggle setAction:@selector(toggleButton:)];
+        [self.errorToggle setTarget:self];
         [self addSubview:self.errorToggle];
-        [self.errorToggle addTrackingRect:self.errorToggle.frame owner:self userData:(void*)CFBridgingRetain([NSNumber numberWithInteger:WLMenuItemViewToggleTypeError]) assumeInside:NO];
         
         self.warningToggle = [[WLMenuItemViewToggle alloc] initWithFillColor:[NSColor pastelOrange] strokeColor:[NSColor outlineOrange]];
+        [self.warningToggle setAction:@selector(toggleButton:)];
+        [self.warningToggle setTarget:self];
         [self addSubview:self.warningToggle];
-        [self.warningToggle addTrackingRect:self.warningToggle.frame owner:self userData:(void*)CFBridgingRetain([NSNumber numberWithInteger:WLMenuItemViewToggleTypeWarning]) assumeInside:NO];
+
         
         self.analyzeToggle = [[WLMenuItemViewToggle alloc] initWithFillColor:[NSColor pastelBlue] strokeColor:[NSColor outlineBlue]];
+        [self.analyzeToggle setAction:@selector(toggleButton:)];
+        [self.analyzeToggle setTarget:self];
         [self addSubview:self.analyzeToggle];
-        [self.analyzeToggle addTrackingRect:self.analyzeToggle.frame owner:self userData:(void*)CFBridgingRetain([NSNumber numberWithInteger:WLMenuItemViewToggleTypeAnalyze]) assumeInside:NO];
         
         self.successToggle = [[WLMenuItemViewToggle alloc] initWithFillColor:[NSColor pastelGreen] strokeColor:[NSColor outlineGreen]];
+        [self.successToggle setAction:@selector(toggleButton:)];
+        [self.successToggle setTarget:self];
         [self addSubview:self.successToggle];
-        [self.successToggle addTrackingRect:self.successToggle.frame owner:self userData:(void*)CFBridgingRetain([NSNumber numberWithInteger:WLMenuItemViewToggleTypeSuccess]) assumeInside:NO];
+  
         
         [self setTranslatesAutoresizingMaskIntoConstraints:NO];
         [self.nameLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -105,29 +118,93 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
     return self;
 }
 
-- (void)mouseUp:(NSEvent *)theEvent
+- (NSMutableSet *)toggleTrackingAreas
 {
-    void* data = theEvent.userData;
-    NSNumber *number = CFBridgingRelease(data);
-    switch ([number integerValue]) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _toggleTrackingAreas = [[NSMutableSet alloc] initWithCapacity:4];
+    });
+    return _toggleTrackingAreas;
+}
+
+- (void)setFrame:(NSRect)frameRect
+{
+    [super setFrame:frameRect];
+    [self updateTrackingAreas];
+}
+
+- (void)setBounds:(NSRect)aRect
+{
+    [super setBounds:aRect];
+    [self updateTrackingAreas];
+}
+
+- (void)updateTrackingAreas
+{
+    for (NSTrackingArea *area in self.trackingAreas)
+    {
+        [self removeTrackingArea:area];
+    }
+    
+    NSTrackingArea *errorArea = [[NSTrackingArea alloc] initWithRect:self.errorToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemViewToggleTypeKey: @(WLMenuItemViewToggleTypeError), WLToggleKey: self.errorToggle}];
+    [self addTrackingArea:errorArea];
+    NSTrackingArea *warningArea = [[NSTrackingArea alloc] initWithRect:self.warningToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemViewToggleTypeKey: @(WLMenuItemViewToggleTypeWarning), WLToggleKey: self.warningToggle}];
+    [self addTrackingArea:warningArea];
+    NSTrackingArea *analyzeArea = [[NSTrackingArea alloc] initWithRect:self.analyzeToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemViewToggleTypeKey: @(WLMenuItemViewToggleTypeAnalyze), WLToggleKey: self.analyzeToggle}];
+    [self addTrackingArea:analyzeArea];
+    NSTrackingArea *successArea = [[NSTrackingArea alloc] initWithRect:self.successToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemViewToggleTypeKey: @(WLMenuItemViewToggleTypeSuccess), WLToggleKey: self.successToggle}];
+    [self addTrackingArea:successArea];
+}
+
+- (void)mouseEntered:(NSEvent *)theEvent
+{
+    self.currentHoveredToggleInfo = [[theEvent trackingArea] userInfo];
+    [self alterDescriptionLabel];
+}
+
+- (void)mouseExited:(NSEvent *)theEvent
+{
+    NSDictionary *info = [[theEvent trackingArea] userInfo];
+    WLMenuItemViewToggle *toggle = [info objectForKey:WLToggleKey];
+    [toggle setHighlighted:NO];
+    [toggle setNeedsDisplay:YES];
+    [self.descriptionLabel setStringValue:@""];
+    self.currentHoveredToggleInfo = nil;
+}
+
+- (void)alterDescriptionLabel
+{
+    NSString *description;
+    switch ([[self.currentHoveredToggleInfo objectForKey:WLMenuItemViewToggleTypeKey] integerValue]) {
         case WLMenuItemViewToggleTypeError:
-            NSLog(@"Error");
+            description = @"errors";
             break;
         case WLMenuItemViewToggleTypeWarning:
+            description = @"warnings";
             break;
         case WLMenuItemViewToggleTypeAnalyze:
+            description = @"analyze";
             break;
         case WLMenuItemViewToggleTypeSuccess:
+            description = @"success";
             break;
         default:
             NSAssert(false, @"Mouse up in unfamiliar rectangle");
             break;
     }
+    
+    WLMenuItemViewToggle *toggle = [self.currentHoveredToggleInfo objectForKey:WLToggleKey];
+    [toggle setHighlighted:YES];
+    [toggle setNeedsDisplay:YES];
+    NSString *result = toggle.state ? @"Cancel flash on" : @"Tap to flash on";
+    description = [NSString stringWithFormat:@"%@ on %@.", result, description];
+    [self.descriptionLabel setStringValue:description];
 }
 
-- (void)mouseDown:(NSEvent *)theEvent
+- (void)toggleButton:(WLMenuItemViewToggle*)toggle
 {
-    
+    NSLog(@"Toggle");
+    [self alterDescriptionLabel];
 }
 
 @end
