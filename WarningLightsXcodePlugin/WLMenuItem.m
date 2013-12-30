@@ -30,8 +30,8 @@
 {
     if ([keyPath isEqualToString:@"state"])
     {
-        self.state = [[change objectForKey:NSKeyValueChangeNewKey] integerValue];
-        NSLog(@"%lu", self.state);
+        _state = [[change objectForKey:NSKeyValueChangeNewKey] integerValue];
+        NSLog(@"State: %lu", self.state);
         if ([self.target respondsToSelector:selector])
         {
             IMP imp = [self.target methodForSelector:selector];
@@ -39,6 +39,12 @@
             func(self.target, selector, self);
         }
     }
+}
+
+- (void)setState:(NSInteger)state
+{
+    WLMenuItemView *view = (WLMenuItemView *)self.view;
+    [view updateWithState:state];
 }
 
 @end

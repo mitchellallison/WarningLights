@@ -16,6 +16,12 @@ static NSString *const WLToggleKey = @"WLToggleKey";
 
 @interface WLMenuItemView ()
 
+@property NSInteger state;
+
+@end
+
+@interface WLMenuItemView ()
+
 @property (strong) WLMenuItemViewToggle *errorToggle;
 @property (strong) WLMenuItemViewToggle *warningToggle;
 @property (strong) WLMenuItemViewToggle *analyzeToggle;
@@ -26,6 +32,8 @@ static NSString *const WLToggleKey = @"WLToggleKey";
 @property (strong) NSDictionary *currentHoveredToggleInfo;
 
 @property NSTextField *descriptionLabel;
+
+- (void)toggleButton:(WLMenuItemViewToggle *)toggle;
 
 @end
 
@@ -76,6 +84,8 @@ static NSString *const WLToggleKey = @"WLToggleKey";
         [self.successToggle setAction:@selector(toggleButton:)];
         [self.successToggle setTarget:self];
         [self addSubview:self.successToggle];
+        
+        NSLog(@"Toggles created");
   
         [self setupLayoutConstraints];
         
@@ -200,13 +210,30 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     [self.descriptionLabel setStringValue:description];
 }
 
-- (void)toggleButton:(WLMenuItemViewToggle*)toggle
+- (void)toggleButton:(WLMenuItemViewToggle *)toggle
 {
+    NSLog(@"Toggling button");
     [self alterDescriptionLabel];
     if (self.currentHoveredToggleInfo)
     {
         WLMenuItemToggleType type = [[self.currentHoveredToggleInfo objectForKey:WLMenuItemToggleTypeKey] integerValue];
         self.state ^= type;
+    }
+}
+
+- (void)updateWithState:(NSInteger)state
+{
+    self.state = state;
+    NSLog(@"Update with state :%lu", state);
+    NSArray *toggles = @[self.errorToggle, self.warningToggle, self.analyzeToggle, self.successToggle];
+    
+    for (WLMenuItemViewToggle *toggle in toggles)
+    {
+        if (state & 1)
+        {
+            [toggle setState:NSOnState];
+        }
+        state >>= 1;
     }
 }
 

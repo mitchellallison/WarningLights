@@ -11,6 +11,7 @@
 @interface WLMenuItemView : NSView
 
 @property (strong) NSTextField *nameLabel;
-@property NSInteger state;
+
+- (void)updateWithState:(NSInteger)state;
 
 @end

@@ -51,7 +51,7 @@
 {
     // Save the username to NSUserDefaults
     _username = username;
-    NSDictionary *defaultSettings = @{usernameKey: username, selectedLightsKey: [NSMutableArray array]};
+    NSDictionary *defaultSettings = @{usernameKey: username};
     [[NSUserDefaults standardUserDefaults] setObject:defaultSettings forKey:defaultSettingsKey];
     
 }

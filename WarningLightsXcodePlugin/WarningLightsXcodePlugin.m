@@ -52,6 +52,16 @@ static NSMutableDictionary *lightOptionsMap = nil;
                                                  selector:@selector(buildOperationDidStop:)
                                                      name:@"IDEBuildOperationDidStopNotification"
                                                    object:nil];
+        
+        if ([[bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] isEqualToString:@"1.1"] &&
+            ![[NSUserDefaults standardUserDefaults] boolForKey:@"firstLaunchCompletedVersion1.1"])
+        {
+            NSLog(@"First launch!");
+            NSString *appDomain = [[NSBundle mainBundle] bundleIdentifier];
+            [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:appDomain];
+            [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"firstLaunchCompletedVersion1.1"];
+        }
+        
         [self setupMenuBarItem];
         [hueController searchForBridge];
         hueController = [[HueController alloc] initWithDelegate:self];
@@ -105,7 +115,7 @@ static NSMutableDictionary *lightOptionsMap = nil;
         [self.connectButton setEnabled:YES];
         [self.warningLightsItem.submenu insertItem:self.connectButton atIndex:[self.warningLightsItem.submenu indexOfItem:self.bridgeIPField] + 1];
     }
-    // Save the authentication block in the case where the user chooses to authenticate.
+    // Save the authentication block for when the user chooses to authenticate.
     self.authenticationBlock = completion;
     [self.bridgeIPField setTitle:[NSString stringWithFormat:@"Bridge: %@", bridgeIP]];
 }
@@ -127,9 +137,10 @@ static NSMutableDictionary *lightOptionsMap = nil;
 
 - (void)lightsFound:(NSArray *)lights
 {
-    NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey];
+    NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:warningLightsSettingsKey];
     NSArray *ids = defaultSettings[selectedLightsKey];
-    NSLog(@"%@", ids);
+    NSLog(@"IDs: %lu", [ids count]);
+    lightOptionsMap = [defaultSettings[lightOptionsKey] mutableCopy];
     if (self.lightSeperator.menu != nil)
     {
         for (NSInteger i = [self.warningLightsItem.submenu indexOfItem:self.lightSeperator] + 1; i < [self.warningLightsItem.submenu numberOfItems]; i++)
@@ -150,7 +161,10 @@ static NSMutableDictionary *lightOptionsMap = nil;
         [lightItem setTarget:self];
         [self.warningLightsItem.submenu insertItem:lightItem atIndex:[self.warningLightsItem.submenu numberOfItems]];
         if ([ids containsObject:light.uniqueID])
+        {
             [selectedLights addObject:light];
+            [lightItem setState:[[lightOptionsMap objectForKey:light.uniqueID] integerValue]];
+        }
         
         [lightItem.view layoutSubtreeIfNeeded];
     }
@@ -183,6 +197,7 @@ static NSMutableDictionary *lightOptionsMap = nil;
 {
     HueLight *light = [hueController lightWithName:lightMenuItem.title];
     NSInteger state = lightMenuItem.state;
+    NSLog(@"State: %lu", state);
     if (light)
     {
         // Toggle light
@@ -197,14 +212,17 @@ static NSMutableDictionary *lightOptionsMap = nil;
             }
             else
             {
+                NSLog(@"Resetting light map");
                 [lightOptionsMap setObject:@(state) forKey:light.uniqueID];
+                [self updateChangedState:@(state) forLight:light.uniqueID];
             }
         }
         else
         {
             if (state != WLMenuItemToggleTypeNone)
             {
-                [selectedLights addObject:[hueController lightWithName:lightMenuItem.title]];
+                NSLog(@"Adding to light map");
+                [selectedLights addObject:light];
                 [lightOptionsMap setObject:@(state) forKey:light.uniqueID];
                 [self addSelectedLight:light withState:@(state)];
             }
@@ -223,7 +241,7 @@ static NSMutableDictionary *lightOptionsMap = nil;
 - (void)addSelectedLight:(HueLight *)light withState:(NSNumber *)state
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableDictionary *defaultSettings = [[[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey] mutableCopy];
+    NSMutableDictionary *defaultSettings = [[[NSUserDefaults standardUserDefaults] objectForKey:warningLightsSettingsKey] mutableCopy];
     NSMutableArray *lights = [defaultSettings[selectedLightsKey] mutableCopy];
     [lights addObject:light.uniqueID];
     
@@ -232,7 +250,21 @@ static NSMutableDictionary *lightOptionsMap = nil;
     NSMutableDictionary *options = [defaultSettings[lightOptionsKey] mutableCopy];
     [options setObject:state forKey:light.uniqueID];
     
-    [defaults setObject:defaultSettings forKey:defaultSettingsKey];
+    defaultSettings[lightOptionsKey] = options;
+    
+    [defaults setObject:defaultSettings forKey:warningLightsSettingsKey];
+}
+
+- (void)updateChangedState:(NSNumber *)state forLight:(NSString *)light
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSMutableDictionary *defaultSettings = [[[NSUserDefaults standardUserDefaults] objectForKey:warningLightsSettingsKey] mutableCopy];
+    NSMutableDictionary *options = [defaultSettings[lightOptionsKey] mutableCopy];
+    [options setObject:state forKey:light];
+    
+    defaultSettings[lightOptionsKey] = options;
+    
+    [defaults setObject:defaultSettings forKey:warningLightsSettingsKey];
 }
 
 /*! Removes a persisted selected light in NSUserDefaults.
@@ -241,7 +273,7 @@ static NSMutableDictionary *lightOptionsMap = nil;
 - (void)removeSelectedLight:(HueLight *)light
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableDictionary *defaultSettings = [[[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey] mutableCopy];
+    NSMutableDictionary *defaultSettings = [[[NSUserDefaults standardUserDefaults] objectForKey:warningLightsSettingsKey] mutableCopy];
     NSMutableArray *lights = [defaultSettings[selectedLightsKey] mutableCopy];
     [lights removeObject:light.uniqueID];
     
@@ -252,7 +284,7 @@ static NSMutableDictionary *lightOptionsMap = nil;
     
     defaultSettings[lightOptionsKey] = options;
     
-    [defaults setObject:defaultSettings forKey:defaultSettingsKey];
+    [defaults setObject:defaultSettings forKey:warningLightsSettingsKey];
 }
 
 /*! Displays an NSAlert, prompting the user to authenticate with the bridge.
@@ -271,27 +303,29 @@ static NSMutableDictionary *lightOptionsMap = nil;
     if (code == NSAlertDefaultReturn)
     {
         // Authenticate with the previously saved block.
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:@{selectedLightsKey: [NSArray array], lightOptionsKey: [NSDictionary dictionary]} forKey:warningLightsSettingsKey];
         self.authenticationBlock();
     }
 }
 
-#pragma mark NSUserInterfaceValidationProtocol
-
-- (BOOL)validateUserInterfaceItem:(NSMenuItem <NSValidatedUserInterfaceItem>*)item
-{
-    if ([item action] == @selector(lightSelectionChangedWithItem:))
-    {
-        if ([item respondsToSelector:@selector(setState:)])
-        {
-            // Manage checkbox
-            if ([selectedLights containsObject:[hueController lightWithName:item.title]])
-                [item setState:NSOnState];
-            else
-                [item setState:NSOffState];
-        }
-    }
-    return YES;
-}
+//#pragma mark NSUserInterfaceValidationProtocol
+//
+//- (BOOL)validateUserInterfaceItem:(NSMenuItem <NSValidatedUserInterfaceItem>*)item
+//{
+//    if ([item action] == @selector(lightSelectionChangedWithItem:))
+//    {
+//        if ([item respondsToSelector:@selector(setState:)])
+//        {
+//            // Manage checkbox
+//            if ([selectedLights containsObject:[hueController lightWithName:item.title]])
+//                [item setState:NSOnState];
+//            else
+//                [item setState:NSOffState];
+//        }
+//    }
+//    return YES;
+//}
 
 - (void)buildOperationDidStop:(NSNotification *)notification
 {
@@ -305,43 +339,35 @@ static NSMutableDictionary *lightOptionsMap = nil;
     uint64_t analyzed = (uint64_t)[buildLog performSelector:@selector(totalNumberOfWarnings)];
     
 #pragma clang diagnostic pop
-    
+
     [selectedLights enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         HueLight *light = (HueLight *)obj;
 
+        NSLog(@"%@", [lightOptionsMap objectForKey:light.uniqueID]);
         WLMenuItemToggleType options = [[lightOptionsMap objectForKey:light.uniqueID] integerValue];
         
-        if (options != WLMenuItemToggleTypeNone)
-        {
+        NSLog(@"%@ with options :%lu", light.name, options);
+        
             [light syncWithCompletionBlock:^{
                 // Save previous light state
                 [light pushState];
-                
+
                 if (errors > 0 && ((options & WLMenuItemToggleTypeError) == WLMenuItemToggleTypeError))
                     [self fadeLight:light toHue:0 overTransitionTime:20];
                 
                 if (warnings > 0 && ((options & WLMenuItemToggleTypeWarning) == WLMenuItemToggleTypeWarning))
-                    [self fadeLight:light toHue:39 overTransitionTime:20];
+                    [self fadeLight:light toHue:8738 overTransitionTime:20];
                 
                 if (analyzed > 0 && ((options & WLMenuItemToggleTypeAnalyze) == WLMenuItemToggleTypeAnalyze))
-                    [self fadeLight:light toHue:240 overTransitionTime:20];
+                    [self fadeLight:light toHue:46920 overTransitionTime:20];
                 
+                if (errors + warnings + analyzed == 0 && ((options & WLMenuItemToggleTypeSuccess) == WLMenuItemToggleTypeSuccess))
+                    [self fadeLight:light toHue:25500 overTransitionTime:20];
+
                 // Revert to previous state over 2 seconds
                 [light popStateWithTransitionTime:20];
             }];
-        }
-        else
-        {
-            if (errors + warnings + analyzed == 0 && ((options & WLMenuItemToggleTypeNone) == WLMenuItemToggleTypeNone))
-            {
-                NSLog(@"Successful build");
-                [light syncWithCompletionBlock:^{
-                    [self fadeLight:light toHue:120 overTransitionTime:20];
-                    [light popStateWithTransitionTime:20];
-                }];
-            }
-        }
-    }];
+        }];
 }
 
 - (void)fadeLight:(HueLight *)light toHue:(uint16_t)hue overTransitionTime:(uint16_t)time

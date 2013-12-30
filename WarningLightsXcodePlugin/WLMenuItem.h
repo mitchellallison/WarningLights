@@ -13,6 +13,6 @@
 
 - (instancetype)initWithTitle:(NSString *)aString action:(SEL)aSelector keyEquivalent:(NSString *)charCode;
 
-@property NSInteger state;
+@property (nonatomic) NSInteger state;
 
 @end

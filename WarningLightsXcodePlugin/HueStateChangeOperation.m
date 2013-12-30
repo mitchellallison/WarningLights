@@ -95,6 +95,7 @@
     if (!error && self.responseData)
     {
         NSDictionary *results = [NSJSONSerialization JSONObjectWithData:self.responseData options:0 error:&error];
+        NSLog(@"results: %@", results);
         [self.delegate hueStateDidChangeWithDictionary:results];
     }
     else
