@@ -10,6 +10,7 @@
 #import "WLMenuItemViewToggle.h"
 #import "NSColor+WLColors.h"
 #import "WLMenuConstants.h"
+#import <QuartzCore/QuartzCore.h>
 
 static NSString *const WLMenuItemToggleTypeKey = @"WLMenuItemToggleType";
 static NSString *const WLToggleKey = @"WLToggleKey";
@@ -57,11 +58,11 @@ static NSString *const WLToggleKey = @"WLToggleKey";
         self.descriptionLabel = [[NSTextField alloc] init];
         [self.descriptionLabel setEditable:NO];
         [self.descriptionLabel setBezeled:NO];
-        [self.descriptionLabel setDrawsBackground:NO];
         [self.descriptionLabel setSelectable:NO];
         [self.descriptionLabel setFont:[NSFont labelFontOfSize:[NSFont labelFontSize]]];
         [self.descriptionLabel setTextColor:[NSColor grayColor]];
         [self.descriptionLabel setStringValue:@""];
+        [self.descriptionLabel setAlphaValue:0.0];
         
         [self addSubview:self.descriptionLabel];
         
@@ -88,7 +89,6 @@ static NSString *const WLToggleKey = @"WLToggleKey";
         NSLog(@"Toggles created");
   
         [self setupLayoutConstraints];
-        
     }
     return self;
 }
@@ -115,16 +115,16 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     [s2 setTranslatesAutoresizingMaskIntoConstraints:NO];
     [s3 setTranslatesAutoresizingMaskIntoConstraints:NO];
     
-    NSArray *heightConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_nameLabel]-4-[_errorToggle]-4-[_descriptionLabel]-4-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel, _errorToggle, _descriptionLabel)];
+    NSArray *heightConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_nameLabel]-4-[_errorToggle]-4-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel, _errorToggle)];
     NSArray *labelWidthConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[_nameLabel]-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel)];
     NSArray *toggleWidthConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[e][s1(>=0)][w][s2(==s1)][a][s3(==s1)][s]-|" options:NSLayoutFormatAlignAllCenterY metrics:nil views:@{@"e": _errorToggle, @"w": _warningToggle, @"a": _analyzeToggle, @"s": _successToggle, @"s1": s1, @"s2": s2, @"s3": s3}];
-    NSLayoutConstraint *centerDescriptionConstraint = [NSLayoutConstraint constraintWithItem:self.descriptionLabel attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0];
+    NSLayoutConstraint *descriptionLabelX = [NSLayoutConstraint constraintWithItem:self.descriptionLabel attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self.nameLabel attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0];
+    NSLayoutConstraint *descriptionLabelY = [NSLayoutConstraint constraintWithItem:self.descriptionLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.nameLabel attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:0.0];
     
     [self addConstraints:heightConstraint];
     [self addConstraints:labelWidthConstraint];
     [self addConstraints:toggleWidthConstraint];
-    [self addConstraint:centerDescriptionConstraint];
-
+    [self addConstraints:@[descriptionLabelX, descriptionLabelY]];
 }
 
 - (NSMutableSet *)toggleTrackingAreas
@@ -177,6 +177,13 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     WLMenuItemViewToggle *toggle = [info objectForKey:WLToggleKey];
     [toggle setHighlighted:NO];
     [toggle setNeedsDisplay:YES];
+    [NSAnimationContext beginGrouping];
+    {
+        [[NSAnimationContext currentContext] setDuration:0.25];
+        [self.descriptionLabel.animator setAlphaValue:0.0];
+        [self.nameLabel.animator setAlphaValue:1.0];
+    }
+    [NSAnimationContext endGrouping];
     [self.descriptionLabel setStringValue:@""];
     self.currentHoveredToggleInfo = nil;
 }
@@ -208,6 +215,13 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     NSString *result = toggle.state ? @"Cancel flash" : @"Tap to flash";
     description = [NSString stringWithFormat:@"%@ on %@.", result, description];
     [self.descriptionLabel setStringValue:description];
+    [NSAnimationContext beginGrouping];
+    {
+        [[NSAnimationContext currentContext] setDuration:0.25];
+        [self.descriptionLabel.animator setAlphaValue:1.0];
+        [self.nameLabel.animator setAlphaValue:0.0];
+    }
+    [NSAnimationContext endGrouping];
 }
 
 - (void)toggleButton:(WLMenuItemViewToggle *)toggle
@@ -224,7 +238,6 @@ static NSString *const WLToggleKey = @"WLToggleKey";
 - (void)updateWithState:(NSInteger)state
 {
     self.state = state;
-    NSLog(@"Update with state :%lu", state);
     NSArray *toggles = @[self.errorToggle, self.warningToggle, self.analyzeToggle, self.successToggle];
     
     for (WLMenuItemViewToggle *toggle in toggles)

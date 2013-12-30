@@ -212,7 +212,6 @@ static NSMutableDictionary *lightOptionsMap = nil;
             }
             else
             {
-                NSLog(@"Resetting light map");
                 [lightOptionsMap setObject:@(state) forKey:light.uniqueID];
                 [self updateChangedState:@(state) forLight:light.uniqueID];
             }
@@ -221,7 +220,6 @@ static NSMutableDictionary *lightOptionsMap = nil;
         {
             if (state != WLMenuItemToggleTypeNone)
             {
-                NSLog(@"Adding to light map");
                 [selectedLights addObject:light];
                 [lightOptionsMap setObject:@(state) forKey:light.uniqueID];
                 [self addSelectedLight:light withState:@(state)];
