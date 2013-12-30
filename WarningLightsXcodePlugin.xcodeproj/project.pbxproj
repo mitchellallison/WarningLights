@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		955ABED61870E06E00EFA9E0 /* NSColor+WLColors.m in Sources */ = {isa = PBXBuildFile; fileRef = 955ABED51870E06E00EFA9E0 /* NSColor+WLColors.m */; };
+		95736371186C919600ECDA1D /* WLMenuItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 95736370186C919600ECDA1D /* WLMenuItemView.m */; };
+		95B42CF91870D9AD007C9D7A /* WLMenuItemViewToggle.m in Sources */ = {isa = PBXBuildFile; fileRef = 95B42CF81870D9AD007C9D7A /* WLMenuItemViewToggle.m */; };
 		EF535B191792AB5300868D42 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EF535B171792AB5300868D42 /* InfoPlist.strings */; };
 		EF535B221792AFC400868D42 /* WarningLightsXcodePlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = EF535B211792ADAC00868D42 /* WarningLightsXcodePlugin.m */; };
 		EF5D6DA917F972B400A06C6E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF535B111792AB5300868D42 /* Foundation.framework */; };
@@ -17,6 +20,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		955ABED41870E06E00EFA9E0 /* NSColor+WLColors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSColor+WLColors.h"; sourceTree = "<group>"; };
+		955ABED51870E06E00EFA9E0 /* NSColor+WLColors.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSColor+WLColors.m"; sourceTree = "<group>"; };
+		9573636F186C919600ECDA1D /* WLMenuItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WLMenuItemView.h; path = ../WLMenuItemView.h; sourceTree = "<group>"; };
+		95736370186C919600ECDA1D /* WLMenuItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WLMenuItemView.m; path = ../WLMenuItemView.m; sourceTree = "<group>"; };
+		95B42CF71870D9AD007C9D7A /* WLMenuItemViewToggle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WLMenuItemViewToggle.h; sourceTree = "<group>"; };
+		95B42CF81870D9AD007C9D7A /* WLMenuItemViewToggle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WLMenuItemViewToggle.m; sourceTree = "<group>"; };
 		EF0882F117FAD5A1002485BD /* HueControllerDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HueControllerDelegate.h; sourceTree = "<group>"; };
 		EF535B0B1792AB5300868D42 /* WarningLightsXcodePlugin.xcplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WarningLightsXcodePlugin.xcplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF535B0E1792AB5300868D42 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -98,6 +107,12 @@
 				EF535B151792AB5300868D42 /* Supporting Files */,
 				EF535B201792ADAC00868D42 /* WarningLightsXcodePlugin.h */,
 				EF535B211792ADAC00868D42 /* WarningLightsXcodePlugin.m */,
+				9573636F186C919600ECDA1D /* WLMenuItemView.h */,
+				95736370186C919600ECDA1D /* WLMenuItemView.m */,
+				95B42CF71870D9AD007C9D7A /* WLMenuItemViewToggle.h */,
+				95B42CF81870D9AD007C9D7A /* WLMenuItemViewToggle.m */,
+				955ABED41870E06E00EFA9E0 /* NSColor+WLColors.h */,
+				955ABED51870E06E00EFA9E0 /* NSColor+WLColors.m */,
 				EFF2FA8F17D0F6FF0037D7CE /* HueConstants.h */,
 				EF8B37B917CA8A7F00A25DB6 /* HueController.h */,
 				EF8B37BA17CA8A7F00A25DB6 /* HueController.m */,
@@ -195,10 +210,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95736371186C919600ECDA1D /* WLMenuItemView.m in Sources */,
 				EF535B221792AFC400868D42 /* WarningLightsXcodePlugin.m in Sources */,
 				EF8B37BB17CA8A7F00A25DB6 /* HueController.m in Sources */,
 				EFBD7E8117CB66BC000D759E /* HueLight.m in Sources */,
 				EFE83C8717E5E34A00A2F010 /* HueStateChangeOperation.m in Sources */,
+				95B42CF91870D9AD007C9D7A /* WLMenuItemViewToggle.m in Sources */,
+				955ABED61870E06E00EFA9E0 /* NSColor+WLColors.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -7,6 +7,7 @@
 //
 
 #import "WarningLightsXcodePlugin.h"
+#import "WLMenuItemView.h"
 #import "HueController.h"
 
 @interface WarningLightsXcodePlugin () <NSMenuDelegate>
@@ -144,10 +145,16 @@ static NSMutableArray *selectedLights = nil;
     {
         // Add the lights to the menu.
         NSMenuItem *lightItem = [[NSMenuItem alloc] initWithTitle:light.name action:@selector(lightSelected:) keyEquivalent:@""];
+        WLMenuItemView *itemView = [[WLMenuItemView alloc] init];
+        [itemView.nameLabel setStringValue:light.name];
+        NSLog(@"%@", NSStringFromRect(itemView.nameLabel.frame));
+        [lightItem setView:itemView];
         [lightItem setTarget:self];
         [self.warningLightsItem.submenu insertItem:lightItem atIndex:[self.warningLightsItem.submenu numberOfItems]];
         if ([ids containsObject:light.uniqueID])
             [selectedLights addObject:light];
+        
+        [lightItem.view layoutSubtreeIfNeeded];
     }
 }
 
@@ -274,7 +281,7 @@ static NSMutableArray *selectedLights = nil;
     // Grab the total number of errors from the build
     id buildLog = [notification.object performSelector:@selector(buildLog)];
     uint64_t errors = (uint64_t)[buildLog performSelector:@selector(totalNumberOfErrors)];
-    
+        
 #pragma clang diagnostic pop
     
     if (errors > 0)
