@@ -196,7 +196,7 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
     WLMenuItemViewToggle *toggle = [self.currentHoveredToggleInfo objectForKey:WLToggleKey];
     [toggle setHighlighted:YES];
     [toggle setNeedsDisplay:YES];
-    NSString *result = toggle.state ? @"Cancel flash on" : @"Tap to flash on";
+    NSString *result = toggle.state ? @"Cancel flash" : @"Tap to flash";
     description = [NSString stringWithFormat:@"%@ on %@.", result, description];
     [self.descriptionLabel setStringValue:description];
 }
