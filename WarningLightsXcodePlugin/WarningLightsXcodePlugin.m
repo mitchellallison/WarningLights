@@ -309,24 +309,6 @@ static NSMutableDictionary *lightOptionsMap = nil;
     }
 }
 
-//#pragma mark NSUserInterfaceValidationProtocol
-//
-//- (BOOL)validateUserInterfaceItem:(NSMenuItem <NSValidatedUserInterfaceItem>*)item
-//{
-//    if ([item action] == @selector(lightSelectionChangedWithItem:))
-//    {
-//        if ([item respondsToSelector:@selector(setState:)])
-//        {
-//            // Manage checkbox
-//            if ([selectedLights containsObject:[hueController lightWithName:item.title]])
-//                [item setState:NSOnState];
-//            else
-//                [item setState:NSOffState];
-//        }
-//    }
-//    return YES;
-//}
-
 - (void)buildOperationDidStop:(NSNotification *)notification
 {
 #pragma clang diagnostic push
@@ -336,7 +318,8 @@ static NSMutableDictionary *lightOptionsMap = nil;
     id buildLog = [notification.object performSelector:@selector(buildLog)];
     uint64_t errors = (uint64_t)[buildLog performSelector:@selector(totalNumberOfErrors)];
     uint64_t warnings = (uint64_t)[buildLog performSelector:@selector(totalNumberOfWarnings)];
-    uint64_t analyzed = (uint64_t)[buildLog performSelector:@selector(totalNumberOfWarnings)];
+    uint64_t analyzed = (uint64_t)[buildLog performSelector:@selector(totalNumberOfAnalyzerResults)];
+    
     
 #pragma clang diagnostic pop
 
