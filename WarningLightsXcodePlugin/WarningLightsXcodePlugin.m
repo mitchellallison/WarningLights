@@ -7,8 +7,8 @@
 //
 
 #import "WarningLightsXcodePlugin.h"
-#import "WLMenuItemView.h"
 #import "HueController.h"
+#import "WLMenuItem.h"
 
 @interface WarningLightsXcodePlugin () <NSMenuDelegate>
 
@@ -28,6 +28,7 @@
 static WarningLightsXcodePlugin *plugin;
 static HueController *hueController = nil;
 static NSMutableArray *selectedLights = nil;
+static NSMutableDictionary *lightOptionsMap = nil;
 
 /*! Class method called on plugin at launch.
  *\param bundle The NSBundle relating to the plug-in.
@@ -55,6 +56,7 @@ static NSMutableArray *selectedLights = nil;
         [hueController searchForBridge];
         hueController = [[HueController alloc] initWithDelegate:self];
         selectedLights = [NSMutableArray array];
+        lightOptionsMap = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -144,11 +146,7 @@ static NSMutableArray *selectedLights = nil;
     for (HueLight *light in lights)
     {
         // Add the lights to the menu.
-        NSMenuItem *lightItem = [[NSMenuItem alloc] initWithTitle:light.name action:@selector(lightSelected:) keyEquivalent:@""];
-        WLMenuItemView *itemView = [[WLMenuItemView alloc] init];
-        [itemView.nameLabel setStringValue:light.name];
-        NSLog(@"%@", NSStringFromRect(itemView.nameLabel.frame));
-        [lightItem setView:itemView];
+        WLMenuItem *lightItem = [[WLMenuItem alloc] initWithTitle:light.name action:@selector(lightSelectionChangedWithItem:) keyEquivalent:@""];
         [lightItem setTarget:self];
         [self.warningLightsItem.submenu insertItem:lightItem atIndex:[self.warningLightsItem.submenu numberOfItems]];
         if ([ids containsObject:light.uniqueID])
@@ -181,21 +179,35 @@ static NSMutableArray *selectedLights = nil;
 /*! Select a light from the NSMenu.
  *\param lightMenuItem The selected item.
  */
-- (void)lightSelected:(NSMenuItem *)lightMenuItem
+- (void)lightSelectionChangedWithItem:(WLMenuItem *)lightMenuItem
 {
     HueLight *light = [hueController lightWithName:lightMenuItem.title];
+    NSInteger state = lightMenuItem.state;
     if (light)
     {
         // Toggle light
         if ([selectedLights containsObject:light])
         {
-            [selectedLights removeObject:light];
-            [self removeSelectedLight:light];
+            assert([lightOptionsMap objectForKey:light.uniqueID]);
+            if (state == WLMenuItemToggleTypeNone)
+            {
+                [selectedLights removeObject:light];
+                [lightOptionsMap removeObjectForKey:light.uniqueID];
+                [self removeSelectedLight:light];
+            }
+            else
+            {
+                [lightOptionsMap setObject:@(state) forKey:light.uniqueID];
+            }
         }
         else
         {
-            [selectedLights addObject:[hueController lightWithName:lightMenuItem.title]];
-            [self addSelectedLight:light];
+            if (state != WLMenuItemToggleTypeNone)
+            {
+                [selectedLights addObject:[hueController lightWithName:lightMenuItem.title]];
+                [lightOptionsMap setObject:@(state) forKey:light.uniqueID];
+                [self addSelectedLight:light withState:@(state)];
+            }
         }
     }
     else
@@ -208,7 +220,7 @@ static NSMutableArray *selectedLights = nil;
 /*! Persists a selected light in NSUserDefaults to maintain choice between app launches.
  *\param light The light to add to the NSUserDefaults.
  */
-- (void)addSelectedLight:(HueLight *)light
+- (void)addSelectedLight:(HueLight *)light withState:(NSNumber *)state
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableDictionary *defaultSettings = [[[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey] mutableCopy];
@@ -216,6 +228,9 @@ static NSMutableArray *selectedLights = nil;
     [lights addObject:light.uniqueID];
     
     defaultSettings[selectedLightsKey] = lights;
+    
+    NSMutableDictionary *options = [defaultSettings[lightOptionsKey] mutableCopy];
+    [options setObject:state forKey:light.uniqueID];
     
     [defaults setObject:defaultSettings forKey:defaultSettingsKey];
 }
@@ -231,6 +246,11 @@ static NSMutableArray *selectedLights = nil;
     [lights removeObject:light.uniqueID];
     
     defaultSettings[selectedLightsKey] = lights;
+    
+    NSMutableDictionary *options = [defaultSettings[lightOptionsKey] mutableCopy];
+    [options removeObjectForKey:light.uniqueID];
+    
+    defaultSettings[lightOptionsKey] = options;
     
     [defaults setObject:defaultSettings forKey:defaultSettingsKey];
 }
@@ -259,7 +279,7 @@ static NSMutableArray *selectedLights = nil;
 
 - (BOOL)validateUserInterfaceItem:(NSMenuItem <NSValidatedUserInterfaceItem>*)item
 {
-    if ([item action] == @selector(lightSelected:))
+    if ([item action] == @selector(lightSelectionChangedWithItem:))
     {
         if ([item respondsToSelector:@selector(setState:)])
         {
@@ -281,33 +301,64 @@ static NSMutableArray *selectedLights = nil;
     // Grab the total number of errors from the build
     id buildLog = [notification.object performSelector:@selector(buildLog)];
     uint64_t errors = (uint64_t)[buildLog performSelector:@selector(totalNumberOfErrors)];
-        
+    uint64_t warnings = (uint64_t)[buildLog performSelector:@selector(totalNumberOfWarnings)];
+    uint64_t analyzed = (uint64_t)[buildLog performSelector:@selector(totalNumberOfWarnings)];
+    
 #pragma clang diagnostic pop
     
-    if (errors > 0)
-    {
-        [selectedLights enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-            HueLight *light = (HueLight *)obj;
+    [selectedLights enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        HueLight *light = (HueLight *)obj;
+
+        WLMenuItemToggleType options = [[lightOptionsMap objectForKey:light.uniqueID] integerValue];
+        
+        if (options != WLMenuItemToggleTypeNone)
+        {
             [light syncWithCompletionBlock:^{
                 // Save previous light state
                 [light pushState];
-                // Perform changes all at once
-                [light commitStateChanges:^{
-                    /* Sets a light on, to maximum brightness and saturation,
-                       to hue: 0 (Red) for 2 seconds */
-                    [light setOn:YES];
-                    [light setHue:0];
-                    [light setTransitionTime:20];
-                    [light setBrightness:255];
-                    [light setSaturation:255];
-                    [light setAlert:HueLightAlertTypeNone];
-                    [light setEffect:HueLightEffectTypeNone];
-                }];
+                
+                if (errors > 0 && ((options & WLMenuItemToggleTypeError) == WLMenuItemToggleTypeError))
+                    [self fadeLight:light toHue:0 overTransitionTime:20];
+                
+                if (warnings > 0 && ((options & WLMenuItemToggleTypeWarning) == WLMenuItemToggleTypeWarning))
+                    [self fadeLight:light toHue:39 overTransitionTime:20];
+                
+                if (analyzed > 0 && ((options & WLMenuItemToggleTypeAnalyze) == WLMenuItemToggleTypeAnalyze))
+                    [self fadeLight:light toHue:240 overTransitionTime:20];
+                
                 // Revert to previous state over 2 seconds
                 [light popStateWithTransitionTime:20];
             }];
-        }];
-    }
+        }
+        else
+        {
+            if (errors + warnings + analyzed == 0 && ((options & WLMenuItemToggleTypeNone) == WLMenuItemToggleTypeNone))
+            {
+                NSLog(@"Successful build");
+                [light syncWithCompletionBlock:^{
+                    [self fadeLight:light toHue:120 overTransitionTime:20];
+                    [light popStateWithTransitionTime:20];
+                }];
+            }
+        }
+    }];
+}
+
+- (void)fadeLight:(HueLight *)light toHue:(uint16_t)hue overTransitionTime:(uint16_t)time
+{
+    // Perform changes all at once
+    [light commitStateChanges:^{
+        /* Sets a light on, to maximum brightness and saturation,
+         to hue for time/10 seconds */
+        [light setOn:YES];
+        [light setHue:hue];
+        [light setTransitionTime:time];
+        [light setBrightness:255];
+        [light setSaturation:255];
+        [light setAlert:HueLightAlertTypeNone];
+        [light setEffect:HueLightEffectTypeNone];
+    }];
+
 }
 
 @end

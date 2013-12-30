@@ -1,5 +1,5 @@
 //
-//  WLMenuItemView.m
+//  WLMenuItem.m
 //  WarningLightsXcodePlugin
 //
 //  Created by Mitchell Allison on 26/12/2013.
@@ -9,17 +9,10 @@
 #import "WLMenuItemView.h"
 #import "WLMenuItemViewToggle.h"
 #import "NSColor+WLColors.h"
+#import "WLMenuConstants.h"
 
-static NSString *const WLMenuItemViewToggleTypeKey = @"WLMenuItemViewToggleType";
+static NSString *const WLMenuItemToggleTypeKey = @"WLMenuItemToggleType";
 static NSString *const WLToggleKey = @"WLToggleKey";
-
-typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
-{
-    WLMenuItemViewToggleTypeError,
-    WLMenuItemViewToggleTypeWarning,
-    WLMenuItemViewToggleTypeAnalyze,
-    WLMenuItemViewToggleTypeSuccess,
-};
 
 @interface WLMenuItemView ()
 
@@ -42,6 +35,8 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
 {
     if (self = [super init])
     {
+        self.state = 0;
+        
         self.nameLabel = [[NSTextField alloc] init];
         [self.nameLabel setEditable:NO];
         [self.nameLabel setBezeled:NO];
@@ -72,7 +67,6 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
         [self.warningToggle setTarget:self];
         [self addSubview:self.warningToggle];
 
-        
         self.analyzeToggle = [[WLMenuItemViewToggle alloc] initWithFillColor:[NSColor pastelBlue] strokeColor:[NSColor outlineBlue]];
         [self.analyzeToggle setAction:@selector(toggleButton:)];
         [self.analyzeToggle setTarget:self];
@@ -83,39 +77,44 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
         [self.successToggle setTarget:self];
         [self addSubview:self.successToggle];
   
-        
-        [self setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [self.nameLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [self.descriptionLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [self.errorToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [self.warningToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [self.analyzeToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [self.successToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
-
-        NSView *s1 = [[NSView alloc] init];
-        NSView *s2 = [[NSView alloc] init];
-        NSView *s3 = [[NSView alloc] init];
-                
-        [self addSubview:s1];
-        [self addSubview:s2];
-        [self addSubview:s3];
-        
-        [s1 setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [s2 setTranslatesAutoresizingMaskIntoConstraints:NO];
-        [s3 setTranslatesAutoresizingMaskIntoConstraints:NO];
-        
-        NSArray *heightConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_nameLabel]-4-[_errorToggle]-4-[_descriptionLabel]-4-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel, _errorToggle, _descriptionLabel)];
-        NSArray *labelWidthConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[_nameLabel]-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel)];
-        NSArray *toggleWidthConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[e][s1(>=0)][w][s2(==s1)][a][s3(==s1)][s]-|" options:NSLayoutFormatAlignAllCenterY metrics:nil views:@{@"e": _errorToggle, @"w": _warningToggle, @"a": _analyzeToggle, @"s": _successToggle, @"s1": s1, @"s2": s2, @"s3": s3}];
-        NSLayoutConstraint *centerDescriptionConstraint = [NSLayoutConstraint constraintWithItem:self.descriptionLabel attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0];
-        
-        [self addConstraints:heightConstraint];
-        [self addConstraints:labelWidthConstraint];
-        [self addConstraints:toggleWidthConstraint];
-        [self addConstraint:centerDescriptionConstraint];
+        [self setupLayoutConstraints];
         
     }
     return self;
+}
+
+- (void)setupLayoutConstraints
+{
+    [self setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.nameLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.descriptionLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.errorToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.warningToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.analyzeToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.successToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
+    
+    NSView *s1 = [[NSView alloc] init];
+    NSView *s2 = [[NSView alloc] init];
+    NSView *s3 = [[NSView alloc] init];
+    
+    [self addSubview:s1];
+    [self addSubview:s2];
+    [self addSubview:s3];
+    
+    [s1 setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [s2 setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [s3 setTranslatesAutoresizingMaskIntoConstraints:NO];
+    
+    NSArray *heightConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_nameLabel]-4-[_errorToggle]-4-[_descriptionLabel]-4-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel, _errorToggle, _descriptionLabel)];
+    NSArray *labelWidthConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[_nameLabel]-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel)];
+    NSArray *toggleWidthConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[e][s1(>=0)][w][s2(==s1)][a][s3(==s1)][s]-|" options:NSLayoutFormatAlignAllCenterY metrics:nil views:@{@"e": _errorToggle, @"w": _warningToggle, @"a": _analyzeToggle, @"s": _successToggle, @"s1": s1, @"s2": s2, @"s3": s3}];
+    NSLayoutConstraint *centerDescriptionConstraint = [NSLayoutConstraint constraintWithItem:self.descriptionLabel attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0];
+    
+    [self addConstraints:heightConstraint];
+    [self addConstraints:labelWidthConstraint];
+    [self addConstraints:toggleWidthConstraint];
+    [self addConstraint:centerDescriptionConstraint];
+
 }
 
 - (NSMutableSet *)toggleTrackingAreas
@@ -146,13 +145,13 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
         [self removeTrackingArea:area];
     }
     
-    NSTrackingArea *errorArea = [[NSTrackingArea alloc] initWithRect:self.errorToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemViewToggleTypeKey: @(WLMenuItemViewToggleTypeError), WLToggleKey: self.errorToggle}];
+    NSTrackingArea *errorArea = [[NSTrackingArea alloc] initWithRect:self.errorToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemToggleTypeKey: @(WLMenuItemToggleTypeError), WLToggleKey: self.errorToggle}];
     [self addTrackingArea:errorArea];
-    NSTrackingArea *warningArea = [[NSTrackingArea alloc] initWithRect:self.warningToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemViewToggleTypeKey: @(WLMenuItemViewToggleTypeWarning), WLToggleKey: self.warningToggle}];
+    NSTrackingArea *warningArea = [[NSTrackingArea alloc] initWithRect:self.warningToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemToggleTypeKey: @(WLMenuItemToggleTypeWarning), WLToggleKey: self.warningToggle}];
     [self addTrackingArea:warningArea];
-    NSTrackingArea *analyzeArea = [[NSTrackingArea alloc] initWithRect:self.analyzeToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemViewToggleTypeKey: @(WLMenuItemViewToggleTypeAnalyze), WLToggleKey: self.analyzeToggle}];
+    NSTrackingArea *analyzeArea = [[NSTrackingArea alloc] initWithRect:self.analyzeToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemToggleTypeKey: @(WLMenuItemToggleTypeAnalyze), WLToggleKey: self.analyzeToggle}];
     [self addTrackingArea:analyzeArea];
-    NSTrackingArea *successArea = [[NSTrackingArea alloc] initWithRect:self.successToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemViewToggleTypeKey: @(WLMenuItemViewToggleTypeSuccess), WLToggleKey: self.successToggle}];
+    NSTrackingArea *successArea = [[NSTrackingArea alloc] initWithRect:self.successToggle.frame options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow owner:self userInfo:@{WLMenuItemToggleTypeKey: @(WLMenuItemToggleTypeSuccess), WLToggleKey: self.successToggle}];
     [self addTrackingArea:successArea];
 }
 
@@ -175,17 +174,17 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
 - (void)alterDescriptionLabel
 {
     NSString *description;
-    switch ([[self.currentHoveredToggleInfo objectForKey:WLMenuItemViewToggleTypeKey] integerValue]) {
-        case WLMenuItemViewToggleTypeError:
+    switch ([[self.currentHoveredToggleInfo objectForKey:WLMenuItemToggleTypeKey] integerValue]) {
+        case WLMenuItemToggleTypeError:
             description = @"errors";
             break;
-        case WLMenuItemViewToggleTypeWarning:
+        case WLMenuItemToggleTypeWarning:
             description = @"warnings";
             break;
-        case WLMenuItemViewToggleTypeAnalyze:
+        case WLMenuItemToggleTypeAnalyze:
             description = @"analyze";
             break;
-        case WLMenuItemViewToggleTypeSuccess:
+        case WLMenuItemToggleTypeSuccess:
             description = @"success";
             break;
         default:
@@ -203,8 +202,12 @@ typedef NS_ENUM(NSInteger, WLMenuItemViewToggleType)
 
 - (void)toggleButton:(WLMenuItemViewToggle*)toggle
 {
-    NSLog(@"Toggle");
     [self alterDescriptionLabel];
+    if (self.currentHoveredToggleInfo)
+    {
+        WLMenuItemToggleType type = [[self.currentHoveredToggleInfo objectForKey:WLMenuItemToggleTypeKey] integerValue];
+        self.state ^= type;
+    }
 }
 
 @end

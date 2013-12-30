@@ -32,6 +32,7 @@ static NSString *const transitionTimeKey = @"transitiontime";
 static NSString *const stateKey = @"state";
 
 static NSString *selectedLightsKey = @"selectedLights";
+static NSString *lightOptionsKey = @"lightOptions";
 static NSString *defaultSettingsKey = @"defaultSettings";
 
 static NSString *const trueKey = @"true";
