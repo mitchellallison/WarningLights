@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9527B9F01872EBF2008E1D67 /* HueLight+Fade.m in Sources */ = {isa = PBXBuildFile; fileRef = 9527B9EF1872EBF2008E1D67 /* HueLight+Fade.m */; };
 		9545175618719E4E006B0FEA /* WLMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 9545175518719E4E006B0FEA /* WLMenuItem.m */; };
 		955ABED61870E06E00EFA9E0 /* NSColor+WLColors.m in Sources */ = {isa = PBXBuildFile; fileRef = 955ABED51870E06E00EFA9E0 /* NSColor+WLColors.m */; };
 		95736371186C919600ECDA1D /* WLMenuItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 95736370186C919600ECDA1D /* WLMenuItemView.m */; };
@@ -21,6 +22,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9527B9EE1872EBF2008E1D67 /* HueLight+Fade.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "HueLight+Fade.h"; sourceTree = "<group>"; };
+		9527B9EF1872EBF2008E1D67 /* HueLight+Fade.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "HueLight+Fade.m"; sourceTree = "<group>"; };
 		9545175418719E4E006B0FEA /* WLMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WLMenuItem.h; sourceTree = "<group>"; };
 		9545175518719E4E006B0FEA /* WLMenuItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WLMenuItem.m; sourceTree = "<group>"; };
 		955ABED41870E06E00EFA9E0 /* NSColor+WLColors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSColor+WLColors.h"; sourceTree = "<group>"; };
@@ -69,6 +72,40 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9527B9F11872EDD5008E1D67 /* Interface */ = {
+			isa = PBXGroup;
+			children = (
+				9573636F186C919600ECDA1D /* WLMenuItemView.h */,
+				95736370186C919600ECDA1D /* WLMenuItemView.m */,
+				95B42CF71870D9AD007C9D7A /* WLMenuItemViewToggle.h */,
+				95B42CF81870D9AD007C9D7A /* WLMenuItemViewToggle.m */,
+			);
+			name = Interface;
+			sourceTree = "<group>";
+		};
+		9527B9F21872EDE4008E1D67 /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				955ABED41870E06E00EFA9E0 /* NSColor+WLColors.h */,
+				955ABED51870E06E00EFA9E0 /* NSColor+WLColors.m */,
+				9527B9EE1872EBF2008E1D67 /* HueLight+Fade.h */,
+				9527B9EF1872EBF2008E1D67 /* HueLight+Fade.m */,
+			);
+			name = Categories;
+			sourceTree = "<group>";
+		};
+		9527B9F31872EDFA008E1D67 /* Protocols and Constants */ = {
+			isa = PBXGroup;
+			children = (
+				EFF2FA8F17D0F6FF0037D7CE /* HueConstants.h */,
+				95C3D9F21871C21200C53A19 /* WLMenuConstants.h */,
+				EF0882F117FAD5A1002485BD /* HueControllerDelegate.h */,
+				EFF2FA8E17D0F1ED0037D7CE /* HueLightDelegate.h */,
+				EFE83C8817E5E76700A2F010 /* HueStateChangeOperationDelegate.h */,
+			);
+			name = "Protocols and Constants";
+			sourceTree = "<group>";
+		};
 		EF535B021792AB5300868D42 = {
 			isa = PBXGroup;
 			children = (
@@ -113,23 +150,15 @@
 				EF535B211792ADAC00868D42 /* WarningLightsXcodePlugin.m */,
 				9545175418719E4E006B0FEA /* WLMenuItem.h */,
 				9545175518719E4E006B0FEA /* WLMenuItem.m */,
-				9573636F186C919600ECDA1D /* WLMenuItemView.h */,
-				95736370186C919600ECDA1D /* WLMenuItemView.m */,
-				95B42CF71870D9AD007C9D7A /* WLMenuItemViewToggle.h */,
-				95B42CF81870D9AD007C9D7A /* WLMenuItemViewToggle.m */,
-				955ABED41870E06E00EFA9E0 /* NSColor+WLColors.h */,
-				955ABED51870E06E00EFA9E0 /* NSColor+WLColors.m */,
-				EFF2FA8F17D0F6FF0037D7CE /* HueConstants.h */,
-				95C3D9F21871C21200C53A19 /* WLMenuConstants.h */,
 				EF8B37B917CA8A7F00A25DB6 /* HueController.h */,
 				EF8B37BA17CA8A7F00A25DB6 /* HueController.m */,
-				EF0882F117FAD5A1002485BD /* HueControllerDelegate.h */,
 				EFBD7E7F17CB66BC000D759E /* HueLight.h */,
 				EFBD7E8017CB66BC000D759E /* HueLight.m */,
 				EFE83C8517E5E34A00A2F010 /* HueStateChangeOperation.h */,
 				EFE83C8617E5E34A00A2F010 /* HueStateChangeOperation.m */,
-				EFF2FA8E17D0F1ED0037D7CE /* HueLightDelegate.h */,
-				EFE83C8817E5E76700A2F010 /* HueStateChangeOperationDelegate.h */,
+				9527B9F31872EDFA008E1D67 /* Protocols and Constants */,
+				9527B9F21872EDE4008E1D67 /* Categories */,
+				9527B9F11872EDD5008E1D67 /* Interface */,
 				EFB06DD917F96F88002E68BF /* Xcode 5 Headers */,
 			);
 			path = WarningLightsXcodePlugin;
@@ -225,6 +254,7 @@
 				95B42CF91870D9AD007C9D7A /* WLMenuItemViewToggle.m in Sources */,
 				9545175618719E4E006B0FEA /* WLMenuItem.m in Sources */,
 				955ABED61870E06E00EFA9E0 /* NSColor+WLColors.m in Sources */,
+				9527B9F01872EBF2008E1D67 /* HueLight+Fade.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

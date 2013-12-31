@@ -9,6 +9,7 @@
 #import "WarningLightsXcodePlugin.h"
 #import "HueController.h"
 #import "WLMenuItem.h"
+#import "HueLight+Fade.h"
 
 @interface WarningLightsXcodePlugin () <NSMenuDelegate>
 
@@ -58,21 +59,20 @@ static const uint16_t greenHue = 26000;
                                                      name:@"IDEBuildOperationDidStopNotification"
                                                    object:nil];
         
+        // On update to 1.1
         if ([[bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] isEqualToString:@"1.1"] &&
             ![[NSUserDefaults standardUserDefaults] boolForKey:@"firstLaunchCompletedVersion1.1"])
         {
-            NSLog(@"First launch!");
-            
             NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey];
             if (defaultSettings)
             {
                 // WarningLights 1.0 has previously been launched and used.
-                NSArray *selectedLights = defaultSettings[selectedLightsKey];
+                NSArray *selectedDefaultLights = defaultSettings[selectedLightsKey];
                 
                 // Set the error toggle for all previously selected lights
                 NSMutableDictionary *lightOptions = [NSMutableDictionary dictionary];
                 
-                for (NSString *light in selectedLights)
+                for (NSString *light in selectedDefaultLights)
                 {
                     [lightOptions setObject:@(WLMenuItemToggleTypeError) forKey:light];
                 }
@@ -87,6 +87,7 @@ static const uint16_t greenHue = 26000;
                 [[NSUserDefaults standardUserDefaults] setObject:@{usernameKey: defaultSettings[usernameKey]} forKey:defaultSettingsKey];
             }
             
+            // Prevent this block from occuring in the future
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"firstLaunchCompletedVersion1.1"];
         }
         
@@ -167,7 +168,6 @@ static const uint16_t greenHue = 26000;
 {
     NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:warningLightsSettingsKey];
     NSArray *ids = defaultSettings[selectedLightsKey];
-    NSLog(@"IDs: %lu", [ids count]);
     lightOptionsMap = [defaultSettings[lightOptionsKey] mutableCopy];
     if (self.lightSeperator.menu != nil)
     {
@@ -218,8 +218,8 @@ static const uint16_t greenHue = 26000;
     }
 }
 
-/*! Select a light from the NSMenu.
- *\param lightMenuItem The selected item.
+/*! Selects a set of options from a light in the NSMenu.
+ *\param lightMenuItem The selected WLMenuItem.
  */
 - (void)lightSelectionChangedWithItem:(WLMenuItem *)lightMenuItem
 {
@@ -227,28 +227,33 @@ static const uint16_t greenHue = 26000;
     NSInteger state = lightMenuItem.state;
     if (light)
     {
-        // Toggle light
         if ([selectedLights containsObject:light])
         {
+            // There should exist a set of options for the light
             assert([lightOptionsMap objectForKey:light.uniqueID]);
             if (state == WLMenuItemToggleTypeNone)
             {
+                // Remove the light from selectedLights and from the options mapping.
                 [selectedLights removeObject:light];
                 [lightOptionsMap removeObjectForKey:light.uniqueID];
+                // Persist these settings.
                 [self removeSelectedLight:light];
             }
             else
             {
+                // Update the state.
                 [lightOptionsMap setObject:@(state) forKey:light.uniqueID];
-                [self updateChangedState:@(state) forLight:light.uniqueID];
+                [self updateLight:light.uniqueID forChangedState:@(state)];
             }
         }
         else
         {
             if (state != WLMenuItemToggleTypeNone)
             {
+                // Add the light to selectedLights and into the options mapping.
                 [selectedLights addObject:light];
                 [lightOptionsMap setObject:@(state) forKey:light.uniqueID];
+                // Persist these settings
                 [self addSelectedLight:light withState:@(state)];
             }
         }
@@ -262,6 +267,7 @@ static const uint16_t greenHue = 26000;
 
 /*! Persists a selected light in NSUserDefaults to maintain choice between app launches.
  *\param light The light to add to the NSUserDefaults.
+ *\param state An NSNumber representing the WLMenuToggleItemToggleType state of the light.
  */
 - (void)addSelectedLight:(HueLight *)light withState:(NSNumber *)state
 {
@@ -280,7 +286,11 @@ static const uint16_t greenHue = 26000;
     [defaults setObject:defaultSettings forKey:warningLightsSettingsKey];
 }
 
-- (void)updateChangedState:(NSNumber *)state forLight:(NSString *)light
+/*! Updates a selected light in NSUserDefaults to maintain choice between app launches.
+ *\param light The light to add to the NSUserDefaults.
+ *\param state An NSNumber representing the WLMenuToggleItemToggleType state of the light.
+ */
+- (void)updateLight:(NSString *)light forChangedState:(NSNumber *)state
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableDictionary *defaultSettings = [[[NSUserDefaults standardUserDefaults] objectForKey:warningLightsSettingsKey] mutableCopy];
@@ -351,71 +361,49 @@ static const uint16_t greenHue = 26000;
     [selectedLights enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         HueLight *light = (HueLight *)obj;
 
+        // Get the light selections, and only perform the flashes below if the option was turned on.
         WLMenuItemToggleType options = [[lightOptionsMap objectForKey:light.uniqueID] integerValue];
         
+        // The build log reported errors. Flash the selected light red.
         if (errors > 0 && ((options & WLMenuItemToggleTypeError) == WLMenuItemToggleTypeError))
         {
             [light syncWithCompletionBlock:^{
                 // Save previous light state
                 [light pushState];
-
-                [self fadeLight:light toHue:redHue sat:255 bri:255 overTransitionTime:20];
-                
+                [light fadeLightToHue:redHue sat:255 bri:255 overTransitionTime:20];
                 [light popStateWithTransitionTime:20];
             }];
         }
         
+        // The build log reported warnings. Flash the selected light orange.
         if (warnings > 0 && ((options & WLMenuItemToggleTypeWarning) == WLMenuItemToggleTypeWarning))
         {
             [light syncWithCompletionBlock:^{
-                // Save previous light state
                 [light pushState];
-
-                [self fadeLight:light toHue:orangeHue sat:255 bri:255 overTransitionTime:20];
-                
+                [light fadeLightToHue:orangeHue sat:255 bri:255 overTransitionTime:20];
                 [light popStateWithTransitionTime:20];
             }];
         }
         
+        // The build log reported analyzer messages. Flash the selected light blue.
         if (analyzed > 0 && ((options & WLMenuItemToggleTypeAnalyze) == WLMenuItemToggleTypeAnalyze))
         {
             [light syncWithCompletionBlock:^{
-                // Save previous light state
                 [light pushState];
-
-                [self fadeLight:light toHue:blueHue sat:255 bri:255 overTransitionTime:20];
-                
+                [light fadeLightToHue:blueHue sat:255 bri:255 overTransitionTime:20];
                 [light popStateWithTransitionTime:20];
             }];
         }
         
+        // The build log reported none of the above. Flash the selected light green.
         if (errors + warnings + analyzed == 0 && ((options & WLMenuItemToggleTypeSuccess) == WLMenuItemToggleTypeSuccess))
         {
             [light syncWithCompletionBlock:^{
-                // Save previous light state
                 [light pushState];
-                
-                [self fadeLight:light toHue:greenHue sat:255 bri:255 overTransitionTime:20];
-                
+                [light fadeLightToHue:greenHue sat:255 bri:255 overTransitionTime:20];
                 [light popStateWithTransitionTime:20];
             }];
         }
-    }];
-}
-
-- (void)fadeLight:(HueLight *)light toHue:(uint16_t)hue sat:(uint8_t)sat bri:(uint8_t)bri overTransitionTime:(uint16_t)time
-{
-    // Perform changes all at once
-    [light commitStateChanges:^{
-        /* Sets a light on, to maximum brightness and saturation,
-         to hue for time/10 seconds */
-        [light setOn:YES];
-        [light setHue:hue];
-        [light setTransitionTime:time];
-        [light setBrightness:bri];
-        [light setSaturation:sat];
-        [light setAlert:HueLightAlertTypeNone];
-        [light setEffect:HueLightEffectTypeNone];
     }];
 }
 

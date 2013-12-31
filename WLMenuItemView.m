@@ -28,8 +28,6 @@ static NSString *const WLToggleKey = @"WLToggleKey";
 @property (strong) WLMenuItemViewToggle *analyzeToggle;
 @property (strong) WLMenuItemViewToggle *successToggle;
 
-@property (strong, nonatomic) NSMutableSet *toggleTrackingAreas;
-
 @property (strong) NSDictionary *currentHoveredToggleInfo;
 
 @property NSTextField *descriptionLabel;
@@ -46,6 +44,7 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     {
         self.state = 0;
         
+        // Create the name label
         self.nameLabel = [[NSTextField alloc] init];
         [self.nameLabel setEditable:NO];
         [self.nameLabel setBezeled:NO];
@@ -55,6 +54,7 @@ static NSString *const WLToggleKey = @"WLToggleKey";
         
         [self addSubview:self.nameLabel];
         
+        // Create the description label
         self.descriptionLabel = [[NSTextField alloc] init];
         [self.descriptionLabel setEditable:NO];
         [self.descriptionLabel setBezeled:NO];
@@ -66,6 +66,7 @@ static NSString *const WLToggleKey = @"WLToggleKey";
         
         [self addSubview:self.descriptionLabel];
         
+        // Create the toggles
         self.errorToggle = [[WLMenuItemViewToggle alloc] initWithFillColor:[NSColor pastelRed] strokeColor:[NSColor outlineRed]];
         [self.errorToggle setAction:@selector(toggleButton:)];
         [self.errorToggle setTarget:self];
@@ -86,11 +87,13 @@ static NSString *const WLToggleKey = @"WLToggleKey";
         [self.successToggle setTarget:self];
         [self addSubview:self.successToggle];
         
+        // Set up layout constraints
         [self setupLayoutConstraints];
     }
     return self;
 }
 
+/*! Sets up the layout constraints for the subviews. */
 - (void)setupLayoutConstraints
 {
     [self setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -101,6 +104,8 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     [self.analyzeToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.successToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
     
+    
+    // Spacer views
     NSView *s1 = [[NSView alloc] init];
     NSView *s2 = [[NSView alloc] init];
     NSView *s3 = [[NSView alloc] init];
@@ -113,25 +118,24 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     [s2 setTranslatesAutoresizingMaskIntoConstraints:NO];
     [s3 setTranslatesAutoresizingMaskIntoConstraints:NO];
     
-    NSArray *heightConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_nameLabel]-4-[_errorToggle]-4-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel, _errorToggle)];
-    NSArray *labelWidthConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[_nameLabel]-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel)];
+    
+    // Set up vertical constraints
+    NSArray *yConstraints = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_nameLabel]-4-[_errorToggle]-4-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel, _errorToggle)];
+    
+    // Set up horizontal constraints
+    NSArray *xConstraints = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[_nameLabel]-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(_nameLabel)];
+    
+    // Space out the toggles evenly.
     NSArray *toggleWidthConstraint = [NSLayoutConstraint constraintsWithVisualFormat:@"|-[e][s1(>=0)][w][s2(==s1)][a][s3(==s1)][s]-|" options:NSLayoutFormatAlignAllCenterY metrics:nil views:@{@"e": _errorToggle, @"w": _warningToggle, @"a": _analyzeToggle, @"s": _successToggle, @"s1": s1, @"s2": s2, @"s3": s3}];
+    
+    // Set the description label to have the same center as the name label.
     NSLayoutConstraint *descriptionLabelX = [NSLayoutConstraint constraintWithItem:self.descriptionLabel attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self.nameLabel attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0];
     NSLayoutConstraint *descriptionLabelY = [NSLayoutConstraint constraintWithItem:self.descriptionLabel attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.nameLabel attribute:NSLayoutAttributeCenterY multiplier:1.0 constant:0.0];
     
-    [self addConstraints:heightConstraint];
-    [self addConstraints:labelWidthConstraint];
+    [self addConstraints:yConstraints];
+    [self addConstraints:xConstraints];
     [self addConstraints:toggleWidthConstraint];
     [self addConstraints:@[descriptionLabelX, descriptionLabelY]];
-}
-
-- (NSMutableSet *)toggleTrackingAreas
-{
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        _toggleTrackingAreas = [[NSMutableSet alloc] initWithCapacity:4];
-    });
-    return _toggleTrackingAreas;
 }
 
 - (void)setFrame:(NSRect)frameRect
@@ -148,6 +152,8 @@ static NSString *const WLToggleKey = @"WLToggleKey";
 
 - (void)updateTrackingAreas
 {
+    // Set up tracking areas for all of the toggles.
+    
     for (NSTrackingArea *area in self.trackingAreas)
     {
         [self removeTrackingArea:area];
@@ -165,16 +171,20 @@ static NSString *const WLToggleKey = @"WLToggleKey";
 
 - (void)mouseEntered:(NSEvent *)theEvent
 {
+    // Store the current information and alter the description label.
     self.currentHoveredToggleInfo = [[theEvent trackingArea] userInfo];
     [self alterDescriptionLabel];
 }
 
 - (void)mouseExited:(NSEvent *)theEvent
 {
+    // Set the highlight of the toggle to NO
     NSDictionary *info = [[theEvent trackingArea] userInfo];
     WLMenuItemViewToggle *toggle = [info objectForKey:WLToggleKey];
     [toggle setHighlighted:NO];
     [toggle setNeedsDisplay:YES];
+    
+    // Fade out the description label
     [NSAnimationContext beginGrouping];
     {
         [[NSAnimationContext currentContext] setDuration:0.25];
@@ -186,8 +196,11 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     self.currentHoveredToggleInfo = nil;
 }
 
+/*! Alters the description label depending on what is being hovered over.
+ */
 - (void)alterDescriptionLabel
 {
+    // Get the type of toggle.
     NSString *description;
     switch ([[self.currentHoveredToggleInfo objectForKey:WLMenuItemToggleTypeKey] integerValue]) {
         case WLMenuItemToggleTypeError:
@@ -207,12 +220,17 @@ static NSString *const WLToggleKey = @"WLToggleKey";
             break;
     }
     
+    // Change the highlight of the toggle.
     WLMenuItemViewToggle *toggle = [self.currentHoveredToggleInfo objectForKey:WLToggleKey];
     [toggle setHighlighted:YES];
     [toggle setNeedsDisplay:YES];
+    
+    // Alter the description label.
     NSString *result = toggle.state ? @"Cancel flash" : @"Tap to flash";
     description = [NSString stringWithFormat:@"%@ on %@.", result, description];
     [self.descriptionLabel setStringValue:description];
+    
+    // Fade in the description label.
     [NSAnimationContext beginGrouping];
     {
         [[NSAnimationContext currentContext] setDuration:0.25];
@@ -222,6 +240,9 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     [NSAnimationContext endGrouping];
 }
 
+/*! Changes the state and alters the description label
+ *\param toggle the WLMenuItemViewToggle that has been clicked.
+ */
 - (void)toggleButton:(WLMenuItemViewToggle *)toggle
 {
     [self alterDescriptionLabel];
@@ -232,7 +253,10 @@ static NSString *const WLToggleKey = @"WLToggleKey";
     }
 }
 
-- (void)updateWithState:(NSInteger)state
+/*! Updates the toggle with a given state.
+ *\param state A WLMenuToggleType representing which options are switched on.
+ */
+- (void)updateWithState:(WLMenuItemToggleType)state
 {
     self.state = state;
     NSArray *toggles = @[self.errorToggle, self.warningToggle, self.analyzeToggle, self.successToggle];

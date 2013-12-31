@@ -14,6 +14,10 @@
 @property (strong) NSColor *strokeColor;
 @property BOOL highlighted;
 
-- (instancetype)initWithFillColor:(NSColor *)color strokeColor:(NSColor *)color;
+/*! Initialises a toggle with a fill color and stroke color.
+ *\param fill The fill NSColor for the toggle.
+ *\param stroke The stroke NSColor for the outline of the toggle.
+ */
+- (instancetype)initWithFillColor:(NSColor *)fill strokeColor:(NSColor *)stroke;
 
 @end
