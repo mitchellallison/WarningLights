@@ -60,8 +60,7 @@ static const uint16_t greenHue = 26000;
                                                    object:nil];
         
         // On update to 1.1
-        if ([[bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] isEqualToString:@"1.1"] &&
-            ![[NSUserDefaults standardUserDefaults] boolForKey:@"firstLaunchCompletedVersion1.1"])
+        if (![[NSUserDefaults standardUserDefaults] boolForKey:@"firstLaunchCompletedVersion1.1"])
         {
             NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey];
             if (defaultSettings)
