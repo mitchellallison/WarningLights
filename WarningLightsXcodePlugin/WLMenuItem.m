@@ -31,7 +31,6 @@
     if ([keyPath isEqualToString:@"state"])
     {
         _state = [[change objectForKey:NSKeyValueChangeNewKey] integerValue];
-        NSLog(@"State: %lu", self.state);
         if ([self.target respondsToSelector:selector])
         {
             IMP imp = [self.target methodForSelector:selector];

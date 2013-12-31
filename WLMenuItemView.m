@@ -86,8 +86,6 @@ static NSString *const WLToggleKey = @"WLToggleKey";
         [self.successToggle setTarget:self];
         [self addSubview:self.successToggle];
         
-        NSLog(@"Toggles created");
-  
         [self setupLayoutConstraints];
     }
     return self;
@@ -226,7 +224,6 @@ static NSString *const WLToggleKey = @"WLToggleKey";
 
 - (void)toggleButton:(WLMenuItemViewToggle *)toggle
 {
-    NSLog(@"Toggling button");
     [self alterDescriptionLabel];
     if (self.currentHoveredToggleInfo)
     {

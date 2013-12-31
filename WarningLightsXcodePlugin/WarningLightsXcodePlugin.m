@@ -30,6 +30,11 @@ static HueController *hueController = nil;
 static NSMutableArray *selectedLights = nil;
 static NSMutableDictionary *lightOptionsMap = nil;
 
+static const uint16_t redHue = 0;
+static const uint16_t orangeHue = 8738;
+static const uint16_t blueHue = 46920;
+static const uint16_t greenHue = 26000;
+
 /*! Class method called on plugin at launch.
  *\param bundle The NSBundle relating to the plug-in.
  */
@@ -197,7 +202,6 @@ static NSMutableDictionary *lightOptionsMap = nil;
 {
     HueLight *light = [hueController lightWithName:lightMenuItem.title];
     NSInteger state = lightMenuItem.state;
-    NSLog(@"State: %lu", state);
     if (light)
     {
         // Toggle light
@@ -324,18 +328,15 @@ static NSMutableDictionary *lightOptionsMap = nil;
     [selectedLights enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         HueLight *light = (HueLight *)obj;
 
-        NSLog(@"%@", [lightOptionsMap objectForKey:light.uniqueID]);
         WLMenuItemToggleType options = [[lightOptionsMap objectForKey:light.uniqueID] integerValue];
-        
-        NSLog(@"%@ with options :%lu", light.name, options);
         
         if (errors > 0 && ((options & WLMenuItemToggleTypeError) == WLMenuItemToggleTypeError))
         {
             [light syncWithCompletionBlock:^{
                 // Save previous light state
                 [light pushState];
-                
-                [self fadeLight:light toHue:0 overTransitionTime:30];
+
+                [self fadeLight:light toHue:redHue sat:255 bri:255 overTransitionTime:20];
                 
                 [light popStateWithTransitionTime:20];
             }];
@@ -346,8 +347,8 @@ static NSMutableDictionary *lightOptionsMap = nil;
             [light syncWithCompletionBlock:^{
                 // Save previous light state
                 [light pushState];
-                
-                [self fadeLight:light toHue:8738 overTransitionTime:30];
+
+                [self fadeLight:light toHue:orangeHue sat:255 bri:255 overTransitionTime:20];
                 
                 [light popStateWithTransitionTime:20];
             }];
@@ -358,8 +359,8 @@ static NSMutableDictionary *lightOptionsMap = nil;
             [light syncWithCompletionBlock:^{
                 // Save previous light state
                 [light pushState];
-                
-                [self fadeLight:light toHue:46920 overTransitionTime:30];
+
+                [self fadeLight:light toHue:blueHue sat:255 bri:255 overTransitionTime:20];
                 
                 [light popStateWithTransitionTime:20];
             }];
@@ -371,7 +372,7 @@ static NSMutableDictionary *lightOptionsMap = nil;
                 // Save previous light state
                 [light pushState];
                 
-                [self fadeLight:light toHue:25500 overTransitionTime:30];
+                [self fadeLight:light toHue:greenHue sat:255 bri:255 overTransitionTime:20];
                 
                 [light popStateWithTransitionTime:20];
             }];
@@ -379,7 +380,7 @@ static NSMutableDictionary *lightOptionsMap = nil;
     }];
 }
 
-- (void)fadeLight:(HueLight *)light toHue:(uint16_t)hue overTransitionTime:(uint16_t)time
+- (void)fadeLight:(HueLight *)light toHue:(uint16_t)hue sat:(uint8_t)sat bri:(uint8_t)bri overTransitionTime:(uint16_t)time
 {
     // Perform changes all at once
     [light commitStateChanges:^{
@@ -388,8 +389,8 @@ static NSMutableDictionary *lightOptionsMap = nil;
         [light setOn:YES];
         [light setHue:hue];
         [light setTransitionTime:time];
-        [light setBrightness:255];
-        [light setSaturation:255];
+        [light setBrightness:bri];
+        [light setSaturation:sat];
         [light setAlert:HueLightAlertTypeNone];
         [light setEffect:HueLightEffectTypeNone];
     }];
