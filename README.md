@@ -1,12 +1,17 @@
 WarningLights
 =============
 
-An Xcode plug-in that flashes your Philips Hue light bulb red in the unusual case of a failed build.
+An Xcode plug-in that flashes your Philips Hue light bulbs different colours depending on the result of your build.
 
 Installation
 ------------
 
 To install Warning Lights, pull the repository and perform a build. A bundle is then compiled and stored at ~/Library/Application Support/Developer/Shared/Xcode/Plug-ins. On next launch, the plug-in will be active.
+
+Upgrading from 1.0
+------------------
+
+Warning Lights should retain your previous settings from v1.0. Simply follow the above installation instructions to get going.
 
 Requirements
 ------------
@@ -25,4 +30,7 @@ The submenu handles three states of operation:
   * A Philips Hue bridge has been found, but hasn't been authenticated for usage with Warning Lights. Choosing to authenticate will require the user to press the link button on the bridge within 30 seconds of the given authentication alert.
   * A Philips Hue bridge has been found, and authetnicated. Multiple lights can now be selected for use with Warning Lights.
 
-Once configured, on a build with an error/multiple errors, the selected lights will fade to red before returning back to their previous state.
+Once configured, it is simple to select light flashes for varying build results. Hover over each toggle to get a description of the option.
+
+![Warning Lights menu](https://raw.github.com/mitchellallison/WarningLights/master/WLMenu.png)
+
