@@ -156,49 +156,33 @@
     else if (!self.username)
     {
         NSLog(@"No username found");
-        NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"newdeveloper" relativeToURL:[self bridgeBaseURL]]];
-        [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *authenticationData, NSError *error) {
-            if (authenticationData)
-            {
-                NSDictionary *responseDict = [NSJSONSerialization JSONObjectWithData:authenticationData options:0 error:&error][0];
-                NSDictionary *errorDict = responseDict[errorKey];
-                if (errorDict)
+        [self.delegate bridgeRequiresUserAuthentication:[[self bridgeIP] absoluteString] completion:^{
+            NSMutableDictionary *authDict = [NSMutableDictionary dictionaryWithDictionary:@{@"devicetype": @"WarningLights"}];
+            NSMutableURLRequest *authRequest = [[NSMutableURLRequest alloc] initWithURL:[self bridgeBaseURL]];
+            NSError *authError = nil;
+            NSData *authData = [NSJSONSerialization dataWithJSONObject:authDict options:0 error:&authError];
+            [authRequest setHTTPMethod:@"POST"];
+            [authRequest setHTTPBody:authData];
+            
+            [NSURLConnection sendAsynchronousRequest:authRequest queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *authResponseData, NSError *authError) {
+                if (authResponseData)
                 {
-                    NSString *description = errorDict[descriptionKey];
-                    if (description)
+                    NSDictionary *authResponseDict = [NSJSONSerialization JSONObjectWithData:authResponseData options:0 error:&authError][0];
+                    NSDictionary *success = authResponseDict[successKey];
+                    if (success)
                     {
-                        // Make user press the link button
-                        [self.delegate bridgeRequiresUserAuthentication:[[self bridgeIP] absoluteString] completion:^{
-                            NSMutableDictionary *authDict = [NSMutableDictionary dictionaryWithDictionary:@{@"devicetype": @"WarningLights"}];
-                            NSMutableURLRequest *authRequest = [[NSMutableURLRequest alloc] initWithURL:[self bridgeBaseURL]];
-                            NSError *authError = nil;
-                            NSData *authData = [NSJSONSerialization dataWithJSONObject:authDict options:0 error:&authError];
-                            [authRequest setHTTPMethod:@"POST"];
-                            [authRequest setHTTPBody:authData];
-                            
-                            [NSURLConnection sendAsynchronousRequest:authRequest queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *authResponseData, NSError *authError) {
-                                if (authResponseData)
-                                {
-                                    NSDictionary *authResponseDict = [NSJSONSerialization JSONObjectWithData:authResponseData options:0 error:&authError][0];
-                                    NSDictionary *success = authResponseDict[successKey];
-                                    if (success)
-                                    {
-                                        self.username = success[usernameKey];
-                                        NSLog(@"Successfully authenticated");
-                                        [self.delegate bridgeAuthenticated:[[self bridgeIP] absoluteString]];
-                                        [self syncLights];
-                                    }
-                                    else
-                                    {
-                                        // Attempt again, network connection must have been lost.
-                                        [self searchForBridge];
-                                    }
-                                }
-                            }];
-                        }];
+                        self.username = success[usernameKey];
+                        NSLog(@"Successfully authenticated");
+                        [self.delegate bridgeAuthenticated:[[self bridgeIP] absoluteString]];
+                        [self syncLights];
+                    }
+                    else
+                    {
+                        // Attempt again, network connection must have been lost.
+                        [self searchForBridge];
                     }
                 }
-            }
+            }];
         }];
     }
     // We have the bridge and a username

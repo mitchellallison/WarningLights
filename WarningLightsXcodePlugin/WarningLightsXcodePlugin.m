@@ -62,8 +62,31 @@ static const uint16_t greenHue = 26000;
             ![[NSUserDefaults standardUserDefaults] boolForKey:@"firstLaunchCompletedVersion1.1"])
         {
             NSLog(@"First launch!");
-            NSString *appDomain = [[NSBundle mainBundle] bundleIdentifier];
-            [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:appDomain];
+            
+            NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey];
+            if (defaultSettings)
+            {
+                // WarningLights 1.0 has previously been launched and used.
+                NSArray *selectedLights = defaultSettings[selectedLightsKey];
+                
+                // Set the error toggle for all previously selected lights
+                NSMutableDictionary *lightOptions = [NSMutableDictionary dictionary];
+                
+                for (HueLight *light in selectedLights)
+                {
+                    [lightOptions setObject:@(WLMenuItemToggleTypeError) forKey:light.uniqueID];
+                }
+                
+                // Initialise the new settings.
+                NSDictionary *warningLightsSettings = @{selectedLightsKey: selectedLights, lightOptionsKey: lightOptions};
+                
+                // Store the new settings.
+                [[NSUserDefaults standardUserDefaults] setObject:warningLightsSettings forKey:warningLightsSettingsKey];
+                
+                // Change the old structure.
+                [[NSUserDefaults standardUserDefaults] setObject:@{usernameKey: defaultSettings[usernameKey]} forKey:defaultSettingsKey];
+            }
+            
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"firstLaunchCompletedVersion1.1"];
         }
         
