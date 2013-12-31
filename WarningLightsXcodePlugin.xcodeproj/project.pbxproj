@@ -28,8 +28,8 @@
 		9545175518719E4E006B0FEA /* WLMenuItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WLMenuItem.m; sourceTree = "<group>"; };
 		955ABED41870E06E00EFA9E0 /* NSColor+WLColors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSColor+WLColors.h"; sourceTree = "<group>"; };
 		955ABED51870E06E00EFA9E0 /* NSColor+WLColors.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSColor+WLColors.m"; sourceTree = "<group>"; };
-		9573636F186C919600ECDA1D /* WLMenuItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WLMenuItemView.h; path = ../WLMenuItemView.h; sourceTree = "<group>"; };
-		95736370186C919600ECDA1D /* WLMenuItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WLMenuItemView.m; path = ../WLMenuItemView.m; sourceTree = "<group>"; };
+		9573636F186C919600ECDA1D /* WLMenuItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WLMenuItemView.h; sourceTree = "<group>"; };
+		95736370186C919600ECDA1D /* WLMenuItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WLMenuItemView.m; sourceTree = "<group>"; };
 		95B42CF71870D9AD007C9D7A /* WLMenuItemViewToggle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WLMenuItemViewToggle.h; sourceTree = "<group>"; };
 		95B42CF81870D9AD007C9D7A /* WLMenuItemViewToggle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WLMenuItemViewToggle.m; sourceTree = "<group>"; };
 		95C3D9F21871C21200C53A19 /* WLMenuConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WLMenuConstants.h; sourceTree = "<group>"; };
