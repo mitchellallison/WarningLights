@@ -329,26 +329,54 @@ static NSMutableDictionary *lightOptionsMap = nil;
         
         NSLog(@"%@ with options :%lu", light.name, options);
         
+        if (errors > 0 && ((options & WLMenuItemToggleTypeError) == WLMenuItemToggleTypeError))
+        {
             [light syncWithCompletionBlock:^{
                 // Save previous light state
                 [light pushState];
-
-                if (errors > 0 && ((options & WLMenuItemToggleTypeError) == WLMenuItemToggleTypeError))
-                    [self fadeLight:light toHue:0 overTransitionTime:20];
                 
-                if (warnings > 0 && ((options & WLMenuItemToggleTypeWarning) == WLMenuItemToggleTypeWarning))
-                    [self fadeLight:light toHue:8738 overTransitionTime:20];
+                [self fadeLight:light toHue:0 overTransitionTime:30];
                 
-                if (analyzed > 0 && ((options & WLMenuItemToggleTypeAnalyze) == WLMenuItemToggleTypeAnalyze))
-                    [self fadeLight:light toHue:46920 overTransitionTime:20];
-                
-                if (errors + warnings + analyzed == 0 && ((options & WLMenuItemToggleTypeSuccess) == WLMenuItemToggleTypeSuccess))
-                    [self fadeLight:light toHue:25500 overTransitionTime:20];
-
-                // Revert to previous state over 2 seconds
                 [light popStateWithTransitionTime:20];
             }];
-        }];
+        }
+        
+        if (warnings > 0 && ((options & WLMenuItemToggleTypeWarning) == WLMenuItemToggleTypeWarning))
+        {
+            [light syncWithCompletionBlock:^{
+                // Save previous light state
+                [light pushState];
+                
+                [self fadeLight:light toHue:8738 overTransitionTime:30];
+                
+                [light popStateWithTransitionTime:20];
+            }];
+        }
+        
+        if (analyzed > 0 && ((options & WLMenuItemToggleTypeAnalyze) == WLMenuItemToggleTypeAnalyze))
+        {
+            [light syncWithCompletionBlock:^{
+                // Save previous light state
+                [light pushState];
+                
+                [self fadeLight:light toHue:46920 overTransitionTime:30];
+                
+                [light popStateWithTransitionTime:20];
+            }];
+        }
+        
+        if (errors + warnings + analyzed == 0 && ((options & WLMenuItemToggleTypeSuccess) == WLMenuItemToggleTypeSuccess))
+        {
+            [light syncWithCompletionBlock:^{
+                // Save previous light state
+                [light pushState];
+                
+                [self fadeLight:light toHue:25500 overTransitionTime:30];
+                
+                [light popStateWithTransitionTime:20];
+            }];
+        }
+    }];
 }
 
 - (void)fadeLight:(HueLight *)light toHue:(uint16_t)hue overTransitionTime:(uint16_t)time
@@ -365,7 +393,6 @@ static NSMutableDictionary *lightOptionsMap = nil;
         [light setAlert:HueLightAlertTypeNone];
         [light setEffect:HueLightEffectTypeNone];
     }];
-
 }
 
 @end

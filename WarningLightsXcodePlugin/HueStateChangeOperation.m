@@ -18,6 +18,7 @@
 @property (assign) BOOL isExecuting;
 @property (strong) NSURLConnection *connection;
 @property (strong) NSTimer *timer;
+@property (strong) NSNumber *transitionTime;
 
 @end
 
@@ -33,11 +34,9 @@
         [self.request setHTTPBody:[NSJSONSerialization dataWithJSONObject:dictionary options:0 error:&error]];
         self.delegate = delegate;
         NSNumber* transitionTime = [dictionary objectForKey:transitionTimeKey];
-        if (transitionTime)
-        {
             // Prevents the operation from completing until the transition has occured succesfully.
-            self.timer = [NSTimer timerWithTimeInterval:roundf(([transitionTime floatValue] * kTransitionTimeFactor)) target:self selector:@selector(finish) userInfo:nil repeats:NO];
-        }
+//            self.timer = [NSTimer timerWithTimeInterval:(NSTimeInterval)roundf(([transitionTime floatValue] * kTransitionTimeFactor)) target:self selector:@selector(finish) userInfo:nil repeats:NO];
+        self.transitionTime = transitionTime;
     }
     return self;
 }
@@ -66,6 +65,7 @@
 
 - (void)finish
 {
+    NSLog(@"Timer completed %f", [NSDate timeIntervalSinceReferenceDate]);
     // KVO for superclass
     [self willChangeValueForKey:@"isExecuting"];
     self.isExecuting = NO;
@@ -103,9 +103,14 @@
         [self.delegate errorConnectingToBridge];
     }
 
-    if (self.timer)
+    if (self.transitionTime)
     {
-        [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSDefaultRunLoopMode];
+//        NSLog(@"Timer began %f", [NSDate timeIntervalSinceReferenceDate]);
+//        [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSDefaultRunLoopMode];
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)((NSTimeInterval)roundf(([self.transitionTime floatValue] * kTransitionTimeFactor)) * NSEC_PER_SEC));
+        dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+            [self finish];
+        });
     }
     else
     {
