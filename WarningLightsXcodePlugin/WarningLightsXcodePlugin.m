@@ -72,9 +72,9 @@ static const uint16_t greenHue = 26000;
                 // Set the error toggle for all previously selected lights
                 NSMutableDictionary *lightOptions = [NSMutableDictionary dictionary];
                 
-                for (HueLight *light in selectedLights)
+                for (NSString *light in selectedLights)
                 {
-                    [lightOptions setObject:@(WLMenuItemToggleTypeError) forKey:light.uniqueID];
+                    [lightOptions setObject:@(WLMenuItemToggleTypeError) forKey:light];
                 }
                 
                 // Initialise the new settings.
