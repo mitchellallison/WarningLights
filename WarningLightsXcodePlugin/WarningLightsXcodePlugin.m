@@ -66,6 +66,8 @@ static const uint16_t greenHue = 26000;
             NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey];
             if (defaultSettings)
             {
+                NSLog(@"First launch!");
+                
                 // WarningLights 1.0 has previously been launched and used.
                 NSArray *selectedDefaultLights = defaultSettings[selectedLightsKey];
                 
@@ -78,7 +80,7 @@ static const uint16_t greenHue = 26000;
                 }
                 
                 // Initialise the new settings.
-                NSDictionary *warningLightsSettings = @{selectedLightsKey: selectedLights, lightOptionsKey: lightOptions};
+                NSDictionary *warningLightsSettings = @{selectedLightsKey: selectedDefaultLights, lightOptionsKey: lightOptions};
                 
                 // Store the new settings.
                 [[NSUserDefaults standardUserDefaults] setObject:warningLightsSettings forKey:warningLightsSettingsKey];
