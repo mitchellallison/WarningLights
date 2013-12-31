@@ -156,6 +156,7 @@
     else if (!self.username)
     {
         NSLog(@"No username found");
+        // Make user press the link button
         [self.delegate bridgeRequiresUserAuthentication:[[self bridgeIP] absoluteString] completion:^{
             NSMutableDictionary *authDict = [NSMutableDictionary dictionaryWithDictionary:@{@"devicetype": @"WarningLights"}];
             NSMutableURLRequest *authRequest = [[NSMutableURLRequest alloc] initWithURL:[self bridgeBaseURL]];
