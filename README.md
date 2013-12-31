@@ -16,7 +16,7 @@ Warning Lights should retain your previous settings from v1.0. Simply follow the
 Requirements
 ------------
 
-This has only been tested to work with Xcode 5.0 or later.
+This has only been tested to work with Xcode 5.0.2 or later.
 
 The user is required to have access to a Philips Hue starter kit, and light bulb(s), otherwise the expected behaviour of the plug-in is determined to be rather pointless.
 
@@ -32,5 +32,5 @@ The submenu handles three states of operation:
 
 Once configured, it is simple to select light flashes for varying build results. Hover over each toggle to get a description of the option.
 
-![Warning Lights menu](https://raw.github.com/mitchellallison/WarningLights/master/WLMenu.png)
+<img src="https://raw.github.com/mitchellallison/WarningLights/master/WLMenu.png" alt="Warning Lights menu" height="400px"/>
 
