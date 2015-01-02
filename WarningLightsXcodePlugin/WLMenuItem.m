@@ -40,7 +40,7 @@
     if ([keyPath isEqualToString:@"state"])
     {
         // Store state locally
-        _state = [[change objectForKey:NSKeyValueChangeNewKey] integerValue];
+        _toggleType = [[change objectForKey:NSKeyValueChangeNewKey] integerValue];
         
         // Call the selector
         if ([self.target respondsToSelector:selector])
@@ -53,10 +53,11 @@
 }
 
 // Delegate state change to the toggle
-- (void)setState:(WLMenuItemToggleType)state
+- (void)setToggleType:(WLMenuItemToggleType)toggleType
 {
     WLMenuItemView *view = (WLMenuItemView *)self.view;
-    [view updateWithState:state];
+    _toggleType = toggleType;
+    [view updateWithState:toggleType];
 }
 
 @end

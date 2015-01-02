@@ -1,3 +1,13 @@
+## 1.2
+
+Features:
+
+  - Added support for Xcode 6.0, 6.1.
+
+Note:
+
+  - Updated to accommodate for API changes in Yosemite. As a result, WarningLights now requires the OS X 10.10 SDK.
+
 ## 1.1
 
 Features:

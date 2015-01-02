@@ -37,7 +37,7 @@ static const CGFloat lineWidth = 1;
     CGContextSetLineWidth(graphicsContext, lineWidth);
     
     // If highlighted or in NSOnState
-    if (self.highlighted || self.state) {
+    if (self.isHighlighted || self.state) {
         
         // Highlight the button with a grey circular shadow.
         CGContextSetFillColorWithColor(graphicsContext, [NSColor opaqueGray].CGColor);

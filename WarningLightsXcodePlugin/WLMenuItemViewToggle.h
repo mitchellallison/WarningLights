@@ -12,7 +12,6 @@
 
 @property (strong) NSColor *fillColor;
 @property (strong) NSColor *strokeColor;
-@property BOOL highlighted;
 
 /*! Initialises a toggle with a fill color and stroke color.
  *\param fill The fill NSColor for the toggle.

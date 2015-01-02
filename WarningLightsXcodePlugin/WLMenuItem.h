@@ -19,6 +19,6 @@
 - (instancetype)initWithTitle:(NSString *)aString action:(SEL)aSelector keyEquivalent:(NSString *)charCode;
 
 /*! Maintains the state of the WLMenuItem. See WLMenuItemToggleType for the different types of state. */
-@property (nonatomic) WLMenuItemToggleType state;
+@property (nonatomic) WLMenuItemToggleType toggleType;
 
 @end

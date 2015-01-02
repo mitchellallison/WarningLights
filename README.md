@@ -1,12 +1,14 @@
 WarningLights
 =============
 
-An Xcode plug-in that flashes your Philips Hue light bulbs different colours depending on the result of your build.
+An Xcode plug-in that flashes your Philips Hue light bulbs different colours depending on the outcome of your build.
 
 Installation
 ------------
 
-To install Warning Lights, pull the repository and perform a build. A bundle is then compiled and stored at ~/Library/Application Support/Developer/Shared/Xcode/Plug-ins. On next launch, the plug-in will be active.
+To install Warning Lights, pull the repository and perform a build. A bundle is then compiled and stored at ~/Library/Application Support/Developer/Shared/Xcode/Plug-ins. On next launch, the plug-in will be active. Alternatively, use [Alcatraz][alcatraz].
+
+Note: WarningLights requires the OS X 10.10 SDK and Yosemite to build.
 
 Upgrading from 1.0
 ------------------
@@ -33,4 +35,6 @@ The submenu handles three states of operation:
 Once configured, it is simple to select light flashes for varying build results. Hover over each toggle to get a description of the option.
 
 <img src="https://raw.github.com/mitchellallison/WarningLights/master/WLMenu.png" alt="Warning Lights menu" height="400px"/>
+
+[Alcatraz]: https://github.com/supermarin/Alcatraz
 

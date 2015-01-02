@@ -192,7 +192,7 @@ static const uint16_t greenHue = 26000;
         if ([ids containsObject:light.uniqueID])
         {
             [selectedLights addObject:light];
-            [lightItem setState:[[lightOptionsMap objectForKey:light.uniqueID] integerValue]];
+            [lightItem setToggleType:[[lightOptionsMap objectForKey:light.uniqueID] integerValue]];
         }
         
         [lightItem.view layoutSubtreeIfNeeded];
@@ -225,7 +225,7 @@ static const uint16_t greenHue = 26000;
 - (void)lightSelectionChangedWithItem:(WLMenuItem *)lightMenuItem
 {
     HueLight *light = [hueController lightWithName:lightMenuItem.title];
-    NSInteger state = lightMenuItem.state;
+    NSInteger state = lightMenuItem.toggleType;
     if (light)
     {
         if ([selectedLights containsObject:light])
@@ -361,7 +361,7 @@ static const uint16_t greenHue = 26000;
 
     [selectedLights enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         HueLight *light = (HueLight *)obj;
-
+        
         // Get the light selections, and only perform the flashes below if the option was turned on.
         WLMenuItemToggleType options = [[lightOptionsMap objectForKey:light.uniqueID] integerValue];
         
@@ -395,7 +395,7 @@ static const uint16_t greenHue = 26000;
                 [light popStateWithTransitionTime:20];
             }];
         }
-        
+                
         // The build log reported none of the above. Flash the selected light green.
         if (errors + warnings + analyzed == 0 && ((options & WLMenuItemToggleTypeSuccess) == WLMenuItemToggleTypeSuccess))
         {

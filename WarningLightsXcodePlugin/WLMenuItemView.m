@@ -63,6 +63,7 @@ static NSString *const WLToggleKey = @"WLToggleKey";
         [self.descriptionLabel setTextColor:[NSColor grayColor]];
         [self.descriptionLabel setStringValue:@""];
         [self.descriptionLabel setAlphaValue:0.0];
+        [self.descriptionLabel setDrawsBackground:NO];
         
         [self addSubview:self.descriptionLabel];
         
