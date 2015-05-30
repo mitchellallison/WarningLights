@@ -52,53 +52,63 @@ static const uint16_t greenHue = 26000;
 {
     if (self = [super init])
     {
-        // Whenever a project is launched, register for notifications from IDEBuildOperationDidStopNotification, and
-        // act on the result
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(buildOperationDidStop:)
-                                                     name:@"IDEBuildOperationDidStopNotification"
-                                                   object:nil];
-        
-        // On update to 1.1
-        if (![[NSUserDefaults standardUserDefaults] boolForKey:@"firstLaunchCompletedVersion1.1"])
-        {
-            NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey];
-            if (defaultSettings)
-            {
-                NSLog(@"First launch!");
-                
-                // WarningLights 1.0 has previously been launched and used.
-                NSArray *selectedDefaultLights = defaultSettings[selectedLightsKey];
-                
-                // Set the error toggle for all previously selected lights
-                NSMutableDictionary *lightOptions = [NSMutableDictionary dictionary];
-                
-                for (NSString *light in selectedDefaultLights)
-                {
-                    [lightOptions setObject:@(WLMenuItemToggleTypeError) forKey:light];
-                }
-                
-                // Initialise the new settings.
-                NSDictionary *warningLightsSettings = @{selectedLightsKey: selectedDefaultLights, lightOptionsKey: lightOptions};
-                
-                // Store the new settings.
-                [[NSUserDefaults standardUserDefaults] setObject:warningLightsSettings forKey:warningLightsSettingsKey];
-                
-                // Change the old structure.
-                [[NSUserDefaults standardUserDefaults] setObject:@{usernameKey: defaultSettings[usernameKey]} forKey:defaultSettingsKey];
-            }
-            
-            // Prevent this block from occuring in the future
-            [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"firstLaunchCompletedVersion1.1"];
+        // Hack to check if Xcode is setup. Without this, the menu doesn't load in Xcode 6.4 beta 1.
+        if ([NSApp mainMenu]) {
+            [self applicationDidFinishLaunching:nil];
+        } else {
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidFinishLaunching:) name:NSApplicationDidFinishLaunchingNotification object:nil];
         }
-        
-        [self setupMenuBarItem];
-        [hueController searchForBridge];
-        hueController = [[HueController alloc] initWithDelegate:self];
-        selectedLights = [NSMutableArray array];
-        lightOptionsMap = [NSMutableDictionary dictionary];
     }
     return self;
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification *)notification {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSApplicationDidFinishLaunchingNotification object:nil];
+    
+    // Whenever a project is launched, register for notifications from IDEBuildOperationDidStopNotification, and
+    // act on the result
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(buildOperationDidStop:)
+                                                 name:@"IDEBuildOperationDidStopNotification"
+                                               object:nil];
+    
+    // On update to 1.1
+    if (![[NSUserDefaults standardUserDefaults] boolForKey:@"firstLaunchCompletedVersion1.1"])
+    {
+        NSDictionary *defaultSettings = [[NSUserDefaults standardUserDefaults] objectForKey:defaultSettingsKey];
+        if (defaultSettings)
+        {
+            NSLog(@"First launch!");
+            
+            // WarningLights 1.0 has previously been launched and used.
+            NSArray *selectedDefaultLights = defaultSettings[selectedLightsKey];
+            
+            // Set the error toggle for all previously selected lights
+            NSMutableDictionary *lightOptions = [NSMutableDictionary dictionary];
+            
+            for (NSString *light in selectedDefaultLights)
+            {
+                [lightOptions setObject:@(WLMenuItemToggleTypeError) forKey:light];
+            }
+            
+            // Initialise the new settings.
+            NSDictionary *warningLightsSettings = @{selectedLightsKey: selectedDefaultLights, lightOptionsKey: lightOptions};
+            
+            // Store the new settings.
+            [[NSUserDefaults standardUserDefaults] setObject:warningLightsSettings forKey:warningLightsSettingsKey];
+            
+            // Change the old structure.
+            [[NSUserDefaults standardUserDefaults] setObject:@{usernameKey: defaultSettings[usernameKey]} forKey:defaultSettingsKey];
+        }
+        
+        // Prevent this block from occuring in the future
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"firstLaunchCompletedVersion1.1"];
+    }
+    [self setupMenuBarItem];
+    [hueController searchForBridge];
+    hueController = [[HueController alloc] initWithDelegate:self];
+    selectedLights = [NSMutableArray array];
+    lightOptionsMap = [NSMutableDictionary dictionary];
 }
 
 + (NSBundle *)bundle
@@ -207,15 +217,21 @@ static const uint16_t greenHue = 26000;
     NSMenuItem *productMenuItem = [[NSApp mainMenu] itemWithTitle:@"Product"];
     if (productMenuItem)
     {
-        self.warningLightsItem = [[NSMenuItem alloc] initWithTitle:@"Warning Lights" action:nil keyEquivalent:@""];
-        self.warningLightsItem.submenu = [[NSMenu alloc] initWithTitle:@"Warning Lights"];
-        
-        self.bridgeIPField = [[NSMenuItem alloc] initWithTitle:@"Bridge: Searching..." action:nil keyEquivalent:@""];
-        
-        [productMenuItem.submenu setDelegate:self];
-        [productMenuItem.submenu insertItem:[NSMenuItem separatorItem] atIndex:[productMenuItem.submenu numberOfItems]];
-        [productMenuItem.submenu insertItem:self.warningLightsItem atIndex:[productMenuItem.submenu numberOfItems]];
-        [self.warningLightsItem.submenu addItem:self.bridgeIPField];
+        if (!self.warningLightsItem) {
+            self.warningLightsItem = [[NSMenuItem alloc] initWithTitle:@"Warning Lights" action:nil keyEquivalent:@""];
+            self.warningLightsItem.submenu = [[NSMenu alloc] initWithTitle:@"Warning Lights"];
+            
+            if (hueController.bridgeIP) {
+                [self.bridgeIPField setTitle:[NSString stringWithFormat:@"Bridge: %@", hueController.bridgeIP]];
+            } else {
+                self.bridgeIPField = [[NSMenuItem alloc] initWithTitle:@"Bridge: Searching..." action:nil keyEquivalent:@""];
+            }
+            
+            [productMenuItem.submenu setDelegate:self];
+            [productMenuItem.submenu insertItem:[NSMenuItem separatorItem] atIndex:[productMenuItem.submenu numberOfItems]];
+            [productMenuItem.submenu insertItem:self.warningLightsItem atIndex:[productMenuItem.submenu numberOfItems]];
+            [self.warningLightsItem.submenu addItem:self.bridgeIPField];
+        }
     }
 }
 

@@ -60,4 +60,8 @@
     [view updateWithState:toggleType];
 }
 
+- (void)dealloc {
+    [self.view removeObserver:self forKeyPath:@"state"];
+}
+
 @end

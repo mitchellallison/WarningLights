@@ -36,4 +36,6 @@
  */
 - (HueLight *)lightWithName:(NSString *)name;
 
+@property (nonatomic, strong) NSURL *bridgeIP;
+
 @end

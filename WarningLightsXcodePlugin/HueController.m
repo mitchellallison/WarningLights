@@ -13,7 +13,6 @@
 @interface HueController ()
 
 @property id <HueControllerDelegate> delegate;
-@property (nonatomic, strong) NSURL *bridgeIP;
 @property (nonatomic, strong) NSString *username;
 @property (nonatomic, strong) NSMutableArray *lights;
 
